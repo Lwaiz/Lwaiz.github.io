@@ -36,3 +36,63 @@
 .toc-item.toc-level-3 {
   padding-left: 1rem;
 }
+
+
+
+/* 个人中心头像美化 */
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  margin: 1rem auto;
+  /* 核心：透明边框 */
+  border: 3px solid transparent;
+  
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  display: block;
+}
+
+/* 深色模式适配 */
+[data-theme="dark"] .profile-avatar {
+  border-color: transparent;
+  
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* 鼠标悬停：发光+放大效果 */
+.profile-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(73, 177, 245, 0.6);
+}
+
+/* 微信二维码基础美化 */
+.wechat-qr {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+.wechat-qr img {
+  width: 180px;
+  height: 180px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 2px solid #eee; /* 浅色模式边框 */
+}
+/* 适配深色模式 */
+[data-theme="dark"] .wechat-qr img {
+  border-color: #333;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.wechat-qr p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+.wechat-qr img {
+  transition: transform 0.3s ease;
+}
+.wechat-qr img:hover {
+  transform: scale(1.05); /* 鼠标悬停时放大5% */
+}
