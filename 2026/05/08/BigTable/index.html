@@ -1,0 +1,854 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Bigtable | Leo's Blog</title><meta name="author" content="Leo"><meta name="copyright" content="Leo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Bigtable是一个稀疏的、分布式的、持久化的多维有序映射表。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bigtable">
+<meta property="og:url" content="https://lwaiz.github.io/2026/05/08/BigTable/index.html">
+<meta property="og:site_name" content="Leo&#39;s Blog">
+<meta property="og:description" content="Bigtable是一个稀疏的、分布式的、持久化的多维有序映射表。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lwaiz.github.io/img/background/bg3.png">
+<meta property="article:published_time" content="2026-05-08T12:22:16.000Z">
+<meta property="article:modified_time" content="2026-05-08T14:11:56.838Z">
+<meta property="article:author" content="Leo">
+<meta property="article:tag" content="Bigtable">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="存储">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://lwaiz.github.io/img/background/bg3.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Bigtable",
+  "url": "https://lwaiz.github.io/2026/05/08/BigTable/",
+  "image": "https://lwaiz.github.io/img/background/bg3.png",
+  "datePublished": "2026-05-08T12:22:16.000Z",
+  "dateModified": "2026-05-08T14:11:56.838Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leo",
+      "url": "https://Lwaiz.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://lwaiz.github.io/2026/05/08/BigTable/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":true,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Bigtable',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/style.css" media="all"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css"><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/shuoshuo/"><i class="fa-fw fas fa-comment-dots"></i><span> 随笔</span></a></div><div class="menus_item"><a class="site-page" href="/profile/"><i class="fa-fw fas fa-user"></i><span> 个人中心</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/background/bg3.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/avatar.png" alt="Logo"><span class="site-name">Leo's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Bigtable</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/shuoshuo/"><i class="fa-fw fas fa-comment-dots"></i><span> 随笔</span></a></div><div class="menus_item"><a class="site-page" href="/profile/"><i class="fa-fw fas fa-user"></i><span> 个人中心</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Bigtable</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-08T12:22:16.000Z" title="发表于 2026-05-08 20:22:16">2026-05-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-08T14:11:56.838Z" title="更新于 2026-05-08 22:11:56">2026-05-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/">技术笔记</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="Bigtable"><a href="#Bigtable" class="headerlink" title="Bigtable"></a>Bigtable</h1><p>Bigtable is a sparse, distributed, persistent multidimensional sorted map.</p>
+<pre><code>**Bigtable是一个稀疏的、分布式的、持久化的多维有序映射表。**
+</code></pre>
+<p>Bigtable是谷歌设计的用于<strong>管理结构化数据</strong>的<strong>分布式存储系统</strong>，能够<strong>可靠地扩展至PB级数据和数千台机器</strong>，用于谷歌数十个产品和服务（谷歌分析、谷歌财经、个性化搜索、谷歌地球等），包含各式各样的工作负载，如从吞吐量导向型批量作业，到面向用户的低延迟数据服务。</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/lilpig/p/18859002">cnblogs - Bigtable：一个用于结构化数据的分布式存储系统</a></p>
+<p><a target="_blank" rel="noopener" href="https://lihuimintu.github.io/2019/03/03/read-bigtable/">lihuimintu.github.io - BigTable 学习笔记</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/jankin6/article/details/143090206">CSDN - 精读《Bigtable: A Distributed Storage System for Structured Data》</a></p>
+<h1 id="数据存储格式"><a href="#数据存储格式" class="headerlink" title="数据存储格式"></a>数据存储格式</h1><p>Bigtable表中的数据通过一个<strong>行关键字(Row Key)</strong>、一个<strong>列关键字(Column Key)</strong> 以及 一个**时间戳(Time Stamp)**进行索引。</p>
+<p>在Bigtable中一共有三级索引. 行关键字为第一级索引，列关键字为第二级索引，时间戳为第三级索引。</p>
+<p>BigTable中的存储逻辑可以表示为</p>
+<p><strong>（Row：String，Column：String，Time：int64）→ Value：String</strong></p>
+<p>举例：保存大量web页面和相关信息的集合，我们会使用一个名为Webtable的表。使用URL作为row key，web页面的各个方面作为列名，并将web页面的内容存储在contents列中，列值实际存储在他们被抓取的时间戳下</p>
+<p><img src="/2026/05/08/BigTable/image.png" alt="image.png"></p>
+<pre><code>- 行：”com.cn.www”为网页的URL
+
+- 列：”contents:”为网页的文档内容，”anchor:”为网页的锚链接文本（anchor:为列族，包含2列cnnsi.com和my.look.ca）
+
+- 时间戳：t3、t5、t6、t8和t9均为时间戳
+</code></pre>
+<p><img src="/2026/05/08/BigTable/image_1.png" alt="image_1.png"></p>
+<h2 id="Row-Key-行键"><a href="#Row-Key-行键" class="headerlink" title="Row Key 行键"></a>Row Key 行键</h2><ul>
+<li><p>BigTable的<strong>行关键字可以是任意字符串</strong>，但是大小不能超过64KB</p>
+</li>
+<li><p>在**单个 row key 下的数据读写时原子的，**不管读写了多少不同的列</p>
+</li>
+<li><p>表中数据都是根据行关键字排序的，排序使用<strong>字典序维护</strong></p>
+</li>
+<li><p>表的row range 被动态分区，<strong>每一个row range 称作 tablet,是数据分布和负载均衡的  单位</strong></p>
+</li>
+<li><p>表按照行键范围自动分片位Tablet（100-200MB）</p>
+</li>
+<li><p>同一地址域的网页会被存储在表中的连续位置</p>
+</li>
+</ul>
+<p>对于一个网站 <a href="https://link.zhihu.com/?target=http://www.cnn.com/">www.cnn.com</a> 存储在 Bigtable 中的格式是 com.cnn.www</p>
+<pre><code>这样倒排的好处是,（让同域名数据聚集）对于同一域名下的内容,我们可以进行更加快速的索引
+</code></pre>
+<h2 id="Column-Family-列族"><a href="#Column-Family-列族" class="headerlink" title="Column Family 列族"></a>Column Family 列族</h2><ul>
+<li><p>Column Key 被分组到称作 <strong>列族 （Column Family）</strong> 的集合中</p>
+</li>
+<li><p><strong>列族是访问控制（Access Control）的基本单元</strong></p>
+</li>
+<li><p>列关键字的命名语法： <strong>列族 : 限定词</strong></p>
+</li>
+<li><p><strong>在任何列数据可以存储进列族之前，列族必须被显式创建</strong></p>
+</li>
+<li><p>列族必须预先定义，不可动态增删</p>
+</li>
+<li><p>同一列族的数据物理上存在一起</p>
+</li>
+<li><p><strong>Column Qualifier（列限定符）</strong>：列族内的列名，动态创建，无数量限制</p>
+</li>
+<li><p>列键格式为 <code>family:qualifier</code>（如 <code>contents:html</code>、<code>anchor:cnnsi.com</code>）</p>
+</li>
+</ul>
+<h2 id="Time-Stamp-时间戳"><a href="#Time-Stamp-时间戳" class="headerlink" title="Time Stamp 时间戳"></a>Time Stamp 时间戳</h2><ul>
+<li><p>数据版本通过时间戳来区分</p>
+</li>
+<li><p>时间戳可以被bigtable<strong>实时分配</strong>，也可以被客户端程序<strong>显式指定</strong></p>
+</li>
+<li><p>Bigtable中的时间戳是64位整型数，可精确到毫秒</p>
+</li>
+<li><p>数据版本按时间戳<strong>降序存储</strong>，用于多版本控制</p>
+</li>
+<li><p>为了减轻各版本数据的管理负担，每个列族有2个设置参数，可通过这2个参数可以对废弃版本数据进行自动垃圾收集，<strong>用户可以指定只保存最后n个版本数据</strong></p>
+</li>
+</ul>
+<h2 id="Cell-单元格"><a href="#Cell-单元格" class="headerlink" title="Cell 单元格"></a>Cell 单元格</h2><ul>
+<li><p>最小存储单元，<strong>由（row，column，timestamp）唯一确定</strong></p>
+</li>
+<li><p><strong>Cell的值是纯字节数组，Bigtable不解析格式</strong>，可以是 字符串、二进制、序列化对象等等</p>
+</li>
+</ul>
+<h1 id="构建块"><a href="#构建块" class="headerlink" title="构建块"></a>构建块</h1><p>Bigtable构建在多个谷歌的其它基础设施之上</p>
+<ol>
+<li><p><strong>使用 GFS 存储日志和数据文件</strong></p>
+</li>
+<li><p>Bigtable集群通常运行在一个共享的机器池上，这些机器同时也在运行着其它分布式应用</p>
+</li>
+<li><p>Bigtable依赖集群管理系统来调度任务、管理资源、处理机器故障、监控机器状态</p>
+</li>
+<li><p>Bigtable内部<strong>使用谷歌的SSTable格式来存储数据</strong></p>
+<ul>
+<li><p><strong>SSTable 是一个 持久化、排序的、不可更改的 Map 结构</strong></p>
+</li>
+<li><p>从内部看，SSTable是一系列的数据块，并通过块索引定位，块索引在打开SSTable时加载到内存中，用于快速查找到指定的数据块</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Bigtable依赖高可用的持久性分布式锁——Chubby</strong></p>
+<ol start="2">
+<li><p><strong>确保在任意时间只有一个master存在</strong>；</p>
+</li>
+<li><p>存储Bigtable数据的boot strap位置；</p>
+</li>
+<li><p><strong>发现tablet服务器，释放tablet server</strong>；</p>
+</li>
+<li><p>存储Bigtable schema信息； </p>
+</li>
+<li><p><strong>存储访问控制列表</strong></p>
+</li>
+</ol>
+<p> 如果Chubby挂了，Bigtable就挂了</p>
+</li>
+</ol>
+<h1 id="BigTable-基本结构"><a href="#BigTable-基本结构" class="headerlink" title="BigTable 基本结构"></a>BigTable 基本结构</h1><p><strong>主要组件</strong></p>
+<ul>
+<li><p>一个链接到所有客户端的库</p>
+</li>
+<li><p>一个 master 服务器</p>
+</li>
+<li><p>许多 tablet 服务器 （可随工作负载变更 动态添加）</p>
+</li>
+</ul>
+<p><img src="/2026/05/08/BigTable/image_2.png" alt="image_2.png"></p>
+<p><img src="/2026/05/08/BigTable/image_3.png" alt="image_3.png"></p>
+<h2 id="Master"><a href="#Master" class="headerlink" title="Master"></a><strong>Master</strong></h2><pre><code>1. **给tablet 服务器分配 tablet**
+
+2. **检测 tablet 服务器的新增和过期**
+
+3. 对 tablet 服务器进行 **负载均衡**
+
+4. **执行 GFS 文件的 GC**
+
+5. 处理 schema 变化（如 表 和 列族 的 创建）
+</code></pre>
+<h2 id="Tablet-Server-服务器"><a href="#Tablet-Server-服务器" class="headerlink" title="Tablet Server 服务器"></a><strong>Tablet Server 服务器</strong></h2><pre><code>1. **管理一个 tablet 集合** （通常一个tablet服务器上有 10 - 1000个tablet）
+
+2. **处理tablet 的读写请求**
+
+3. **分割变得过大的 tablet**
+</code></pre>
+<p>如同大多数单master的分布式存储系统，客户端直接与tablet server通信以读写数据，而且它们不依赖master来获取tablet位置信息，大多数客户端从不和master通信。实践中master的负载很轻。</p>
+<p>一个表初始只包含一个tablet，随着表增大，它自动分割出多个tablet，默认每一个大约100到200MB。</p>
+<h1 id="Tablet-位置寻址架构"><a href="#Tablet-位置寻址架构" class="headerlink" title="Tablet 位置寻址架构"></a>Tablet 位置寻址架构</h1><p>使用<strong>三级结构</strong>的<strong>模拟B+ 树</strong>来存储tablet 位置信息</p>
+<p>用于高效定位海量数据表分片（Tablet）的所在节点</p>
+<p><img src="/2026/05/08/BigTable/image_4.png" alt="image_4.png"></p>
+<h3 id="第一层：Chubby文件-（全局入口）"><a href="#第一层：Chubby文件-（全局入口）" class="headerlink" title="第一层：Chubby文件 （全局入口）"></a>第一层：Chubby文件 （全局入口）</h3><ul>
+<li><p><strong>Chubby是谷歌的分布式锁和元数据强一致性服务</strong></p>
+</li>
+<li><p>这个<strong>Chubby文件唯一保存Root Tablet的地址，是整个寻址体系的锚点</strong></p>
+</li>
+<li><p>所有客户端寻址的第一步 都会先访问 Chubby获取根节点位置</p>
+</li>
+<li><p>Chubby服务维护5个活动副本，选择其中一个为Master 并处理请求，通过 Paxos 算法 来保证副本一致性</p>
+</li>
+</ul>
+<p><img src="/2026/05/08/BigTable/image_5.png" alt="image_5.png"></p>
+<h3 id="第二层：Root-Tablet-（META-0）"><a href="#第二层：Root-Tablet-（META-0）" class="headerlink" title="第二层：Root Tablet （META 0）"></a>第二层：Root Tablet （META 0）</h3><ul>
+<li><p>Root Tablet是 METADATA 元数据表的第一个分片</p>
+</li>
+<li><p><strong>永远不会分裂，保证层级稳定</strong></p>
+</li>
+<li><p><strong>存储的是 所有其他METADATA Tablet 的位置信息</strong></p>
+</li>
+</ul>
+<h3 id="第三层：Other-METADATA-Tablet-（META1）"><a href="#第三层：Other-METADATA-Tablet-（META1）" class="headerlink" title="第三层：Other METADATA Tablet （META1）"></a>第三层：Other METADATA Tablet （META1）</h3><ul>
+<li><p>这些元数据分片，<strong>每一条记录都保存 用户数据表 Tablet 的路由位置</strong></p>
+</li>
+<li><p>相当于 二级索引，一次查询可以映射海量用户数据分片</p>
+</li>
+</ul>
+<h3 id="第四层：User-Tablets-数据表分片"><a href="#第四层：User-Tablets-数据表分片" class="headerlink" title="第四层：User Tablets 数据表分片"></a>第四层：User Tablets 数据表分片</h3><ul>
+<li><p>最底层数据，真正存储业务数据的 UserTable1 ~ UserTableN</p>
+</li>
+<li><p>每个用户大表，都会被拆分为多个Tablet，分布在整个集群的 Tablet Server 上</p>
+</li>
+</ul>
+<h3 id="寻址流程"><a href="#寻址流程" class="headerlink" title="寻址流程"></a>寻址流程</h3><ol>
+<li><p>客户端先访问 <strong>Chubby</strong>，拿到 Root Tablet 地址</p>
+</li>
+<li><p>访问 <strong>Root Tablet</strong>，找到目标 METADATA Tablet</p>
+</li>
+<li><p>访问 <strong>METADATA Tablet</strong>，查到目标 User Tablet 所在服务器</p>
+</li>
+<li><p><strong>直接和对应 Tablet Server 通信，完成数据读写</strong></p>
+</li>
+<li><p><strong>客户端会缓存路由结果，后续访问直接命中缓存，大幅降低寻址开销,</strong></p>
+<ol start="6">
+<li>如果没有缓存或者缓存失效，那么客户端会在树状存储结构中 递归查询</li>
+</ol>
+</li>
+</ol>
+<h3 id="设计优势"><a href="#设计优势" class="headerlink" title="设计优势"></a>设计优势</h3><ul>
+<li><p><strong>固定三层深度</strong>：Root 永不分裂，层级永远最多 3 层，查找效率极高</p>
+</li>
+<li><p><strong>极强的可扩展性</strong>：单条 METADATA 记录约 1KB，一个 128MB 的元数据分片，就能寻址海量数据分片，理论可支撑超大规模集群</p>
+</li>
+<li><p><strong>高可靠强一致</strong>：依赖 Chubby 保证根元数据绝对可靠，避免单点故障</p>
+</li>
+<li><p><strong>客户端缓存加速</strong>：路由信息本地缓存，绝大多数访问不需要逐级递归查找</p>
+</li>
+</ul>
+<h1 id="物理存储分层"><a href="#物理存储分层" class="headerlink" title="物理存储分层"></a>物理存储分层</h1><p><strong>Tablet → Memtable &#x2F; SSTable → GFS</strong></p>
+<h1 id="Tablet-分配"><a href="#Tablet-分配" class="headerlink" title="Tablet 分配"></a>Tablet 分配</h1><ul>
+<li><p>**在任何时刻，一个Tablet只能分配给一个Tablet服务器，**由Master来控制分配</p>
+</li>
+<li><p><strong>master会跟踪存活的tablet server集合，以及当前server上的tablet分配情况（包含未分配的tablet）</strong></p>
+<ul>
+<li>当一个tablet未分配，并且有一个具有足够空间的tablet server，master会通过发送一个tablet负载请求到这个server上来分配tablet</li>
+</ul>
+</li>
+<li><p><strong>Bigtable通过 Chubby 跟踪 Tablet服务器的状态。</strong></p>
+<ul>
+<li><p><strong>当Tablet服务器启动时，会在指定Chubby目录下注册一个   唯一名称的文件节点 并获取该文件的 独占锁</strong></p>
+</li>
+<li><p>当Tablet服务器关闭或者失效时，会释放这个独占锁</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Master为了检测 Tablet Server的存活性，会周期性的轮询 每一个 Tablet Server是否还持有锁</strong></p>
+<ul>
+<li><strong>当Tablet服务器不提供服务时</strong>，Master会通过轮询 Chubby 上Tablet服务器文件锁 的状态检查出来，**确认后会删除其在 Chubby注册的节点，**使其不再提供服务。最后Master会重新分配这个Tablet Server 上的 Tablet 到其他未分配的 Tablet集合内</li>
+</ul>
+</li>
+</ul>
+<h2 id="Master启动流程"><a href="#Master启动流程" class="headerlink" title="Master启动流程"></a>Master启动流程</h2><ul>
+<li><p>当集群管理系统<strong>启动一个Master服务器后</strong>，这个Master会执行以下步骤：</p>
+<ol>
+<li><p><strong>从Chubby获取一个唯一的Master锁</strong>，保证Chubby只有一个Master实例</p>
+</li>
+<li><p><strong>扫描 Chubby 上的Tablet文件锁目录，获取当前运行的Tablet Server 列表</strong></p>
+</li>
+<li><p><strong>和所有 Tablet Server通信，获取每个Tablet Server 上的 Tablet 分配信息</strong></p>
+</li>
+<li><p><strong>扫描 MetaData 表 获取所有 Tablet 集合</strong>，如果发现还未分配的 Tablet，就将其加入未分配 Tablet 集合等待分配</p>
+</li>
+</ol>
+</li>
+</ul>
+<p>可能会遇到一种复杂的情况</p>
+<p>在METADATA表的 Tablet 还没有被分配之前是不能够被扫描的</p>
+<p>因此，在开始扫描之前（步骤4），如果在步骤3中没有发现Root Tablet的分配，则 Master 服务器将 Root Tablet 添加到未分配的Tablet集合中。</p>
+<p>这个附加操作确保了Root Tablet会被分配。</p>
+<p>由于Root Tablet 包含了所有 METADATA的 Tablet 名称，因此Master服务器扫描完 Root Tablet 以后，就得到了所有的 METADATA表的名称</p>
+<p>Tablet集合只会在 以下几种情况下 变更：</p>
+<ol>
+<li><p>表 创建 &#x2F; 删除 </p>
+</li>
+<li><p>两个已经存在的Tablet 合并成一个更大的 Tablet</p>
+</li>
+<li><p>一个已经存在的 Tablet 分割成两个更小的 Tablet</p>
+</li>
+</ol>
+<p>除了第 3 个事件，前两个都是由Master启动的。</p>
+<p><strong>Tablet Split是由Tablet Server启动的。</strong></p>
+<h2 id="Tablet分裂"><a href="#Tablet分裂" class="headerlink" title="Tablet分裂"></a><strong>Tablet分裂</strong></h2><h3 id="Tablet分裂流程"><a href="#Tablet分裂流程" class="headerlink" title="Tablet分裂流程"></a><strong>Tablet分裂流程</strong></h3><ol>
+<li><p><strong>分裂触发</strong>：当一个 Tablet 体积过大（默认～100-200MB），Tablet Server 本地将其拆分为 2 个新的<strong>子 Tablet</strong>（左、右分片）。</p>
+</li>
+<li><p><strong>元数据提交</strong>：分裂完成后，Tablet Server 首先<strong>原子更新 METADATA 元数据表</strong>：</p>
+<ul>
+<li><p>删除原父 Tablet 的路由记录</p>
+</li>
+<li><p>写入两个新子 Tablet 的行范围、位置等元数据✅ 到这一步，分裂操作<strong>在全局元数据上正式生效</strong></p>
+</li>
+</ul>
+</li>
+<li><p><strong>主动上报 Master</strong>：元数据持久化成功后，Tablet Server 主动向 Master 发送 <code>Split Complete</code> 通知，告知分裂完成、新 Tablet 信息。</p>
+</li>
+<li><p><strong>Master 更新状态</strong>：Master 收到通知，更新全局 Tablet 分布视图，完成负载均衡与状态同步。</p>
+</li>
+</ol>
+<h3 id="分裂故障场景"><a href="#分裂故障场景" class="headerlink" title="分裂故障场景"></a><strong>分裂故障场景</strong></h3><ul>
+<li><p>分裂第 2 步<strong>已经完成</strong>：<code>METADATA表已经永久写入了新子Tablet信息</code>，分裂本身全局生效</p>
+</li>
+<li><p>第 3 步失败：Tablet Server 发给 Master 的通知<strong>网络丢失</strong>、发送时 Tablet Server 宕机、或 Master 宕机未收到通知</p>
+</li>
+</ul>
+<p>此时状态不一致：</p>
+<ul>
+<li><p>✅ METADATA 表：已经存在新的子 Tablet 条目</p>
+</li>
+<li><p>❌ Master 内存视图：还保留旧的父 Tablet，不知道分裂已经发生</p>
+</li>
+</ul>
+<p>在分割通知丢失的情况下（可能 Tablet服务器或 Master服务器中有一个宕机）</p>
+<h3 id="被动恢复流程"><a href="#被动恢复流程" class="headerlink" title="被动恢复流程"></a><strong>被动恢复流程</strong></h3><ol>
+<li><p><strong>Master 发起加载 &#x2F; 调度请求</strong></p>
+<p> Master 正常进行负载均衡、故障恢复、Tablet 迁移，向 Tablet Server 发送指令，要求加载、管理旧的父 Tablet。</p>
+</li>
+<li><p><strong>两边信息校验不匹配</strong></p>
+<ul>
+<li><p>Master 视角：要加载的还是<strong>未分裂的完整父 Tablet</strong></p>
+</li>
+<li><p>Tablet Server + METADATA 视角：METADATA 表已经标记父 Tablet 不存在，仅存在两个拆分后的子 Tablet</p>
+</li>
+<li><p>Tablet Server 对比 METADATA 权威元数据后发现：Master 要求的目标 Tablet<strong>已经不再完整、已经被分裂</strong>。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Tablet Server 补发通知</strong> </p>
+<p> Tablet Server 不会执行错误的加载指令，而是主动重新向 Master 发送<strong>最新的分裂完成通知</strong>，上报当前真实存在的两个新子 Tablet 的完整信息。</p>
+</li>
+<li><p><strong>最终一致性收敛</strong></p>
+<ul>
+<li><p>Master 收到补发通知后，更新全局路由视图</p>
+</li>
+<li><p>废弃旧父 Tablet 记录，接纳新子 Tablet</p>
+</li>
+<li><p>整个集群分裂状态最终达成一致，整个过程<strong>无需人工干预、自动容错</strong></p>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="设计优势-1"><a href="#设计优势-1" class="headerlink" title="设计优势"></a>设计优势</h3><ol>
+<li><p><strong>元数据优先原则</strong></p>
+<p> 分裂的提交<strong>永远先落地 METADATA 表</strong>，METADATA 是唯一可信源，内存中的 Master 状态永远以持久化元数据为准，避免脑裂。</p>
+</li>
+<li><p><strong>幂等 + 自愈</strong></p>
+<p> 通知可重复发送、可丢失，不会导致重复分裂、数据损坏，任意节点宕机重启都可以通过元数据比对自动修正状态。</p>
+</li>
+<li><p><strong>降低 Master 负担</strong></p>
+<p> Master 不需要感知分裂细节，仅做全局调度；分裂决策、元数据修改全部下放给 Tablet Server，去中心化、性能更强。</p>
+</li>
+<li><p><strong>可用性保障</strong></p>
+<p> 即使通知永久丢失，后续正常的负载调度、Tablet 加载动作，一定会触发不一致检查，最终闭环修复。</p>
+</li>
+</ol>
+<p>整个流程保证：<strong>即使出现任意单点宕机、网络临时中断，分裂操作不会丢失、不会产生数据不一致</strong></p>
+<h1 id="Tablet-服务"><a href="#Tablet-服务" class="headerlink" title="Tablet 服务"></a>Tablet 服务</h1><p><img src="/2026/05/08/BigTable/image_6.png" alt="image_6.png"></p>
+<ul>
+<li><p><strong>Tablet的持久状态保存在 GFS 中</strong>。</p>
+</li>
+<li><p><strong>更新操作会提交 Redo 日志</strong>，更新操作分为两类</p>
+<ul>
+<li><p>最近提交的更新操作会存放在一个排序缓存 <strong>MemTable</strong>中</p>
+</li>
+<li><p>较早提交的更新操作会存放在 <strong>SSTable</strong> 中，落地在GFS中</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Tablet的恢复</strong></p>
+<ul>
+<li><p>Tablet服务器 从 MetaData 表中读取这个Tablet的元数据</p>
+</li>
+<li><p>元数据里面包含了组成这个Tablet的SSTable 和 RedoPoint (其指向任意的可能包含数据的提交日志上)</p>
+</li>
+<li><p>Server读取SSTable的索引到内存中，通过重放在RedoPoint已经提交的所有更新来重建MemTable</p>
+</li>
+</ul>
+</li>
+<li><p><strong>对 Tablet 服务器的写操作</strong></p>
+<ul>
+<li><p>首先检查操作格式正确性和权限 （从Chubby拉取权限列表）</p>
+</li>
+<li><p>之后有效的写记录会写入到提交日志（Commit Log）</p>
+<ul>
+<li>（也支持批量提交）</li>
+</ul>
+</li>
+<li><p>最后写入的内容插入 MemTable 中</p>
+</li>
+</ul>
+</li>
+<li><p><strong>对 Tablet 服务器的读操作</strong></p>
+<ul>
+<li><p>首先检查操作格式正确性和权限</p>
+</li>
+<li><p>之后有效的读操作在一系列 SSTable 和 MemTable 合并的视图内执行 </p>
+<ul>
+<li>（因为SSTable以及memtable都是字典序的有序数据结构，可高效生成 合并视图）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>在tablet被分割或合并过程中的read和write操作可以继续执行。</p>
+<h1 id="压缩-Compaction"><a href="#压缩-Compaction" class="headerlink" title="压缩 Compaction"></a>压缩 Compaction</h1><p><strong>写数据进内存（Memtable）→</strong> </p>
+<p><strong>满了 Minor Compaction 刷成 SSTable →</strong> </p>
+<p><strong>SSTable 堆积太多   →</strong></p>
+<p><strong>Major Compaction 合并、瘦身、清垃圾、回收空间，保证读写长期稳定高效。</strong></p>
+<h2 id="1-Minor-Compaction-（小幅合并-内存刷盘）"><a href="#1-Minor-Compaction-（小幅合并-内存刷盘）" class="headerlink" title="1. Minor Compaction （小幅合并 &#x2F; 内存刷盘）"></a>1. Minor Compaction （小幅合并 &#x2F; 内存刷盘）</h2><p><strong>触发时机</strong></p>
+<ul>
+<li><p><strong>内存中的 Memtable 不断写入、增长，到达预设内存阈值</strong></p>
+</li>
+<li><p>也会在内存压力、后台定时、Tablet 迁移时被动触发</p>
+</li>
+</ul>
+<p><strong>执行过程</strong></p>
+<ol>
+<li><p><strong>当前满的 Memtable 立刻冻结</strong>（停止接收新写入）</p>
+</li>
+<li><p><strong>后台把冻结的 Memtable 整体序列化、排序、写出为一个不可变的 SSTable 文件，落盘到持久化存储</strong>（GFS&#x2F;Colossus）</p>
+</li>
+<li><p><strong>立刻创建一块全新的空 Memtable</strong>，承接新的用户写入</p>
+</li>
+<li><p>本次操作<strong>不会合并、不会清理旧 SSTable</strong>，仅内存转磁盘</p>
+</li>
+</ol>
+<p><strong>优势</strong></p>
+<p>✅ <strong>释放 Tablet Server 内存</strong>，避免内存无限膨胀、OOM</p>
+<p>✅ <strong>缩短灾难恢复时间</strong>：</p>
+<ul>
+<li><p>宕机重启时，只需要重放<strong>最近未落盘的少量 WAL（提交日志）</strong></p>
+</li>
+<li><p>大量历史数据已经固化为 SSTable，不用再从头回放整条日志</p>
+<p>  ✅ 写入路径极快，对前台读写延迟影响极小</p>
+</li>
+</ul>
+<h2 id="2-Major-Compaction（大幅合并-SSTable重写合并）"><a href="#2-Major-Compaction（大幅合并-SSTable重写合并）" class="headerlink" title="2. Major Compaction（大幅合并&#x2F;SSTable重写合并）"></a>2. Major Compaction（大幅合并&#x2F;SSTable重写合并）</h2><p><strong>触发背景与问题</strong></p>
+<ul>
+<li><p>Minor Compaction 持续运行 → <strong>SSTable 文件会越来越多</strong></p>
+</li>
+<li><p><strong>一次读操作需要遍历、归并大量 SSTable</strong>（还要配合内存 Memtable），读延迟显著升高、放大 IO 开销</p>
+</li>
+</ul>
+<p><strong>执行过程</strong></p>
+<ol>
+<li><p><strong>选取多个（甚至全部）层级的旧 SSTable</strong></p>
+</li>
+<li><p><strong>后台全盘读取、多路归并排序</strong></p>
+</li>
+<li><p><strong>剔除无效数据</strong>：</p>
+<ul>
+<li><p><strong>被新版本覆盖的旧单元格</strong></p>
+</li>
+<li><p><strong>带墓碑标记（Tombstone）的已删除数据</strong></p>
+</li>
+<li><p><strong>过期、超出保留版本数量的历史时间戳数据</strong></p>
+</li>
+</ul>
+</li>
+<li><p><strong>生成少量、体积更大、更紧凑的全新 SSTable</strong></p>
+</li>
+<li><p>新文件生效后，<strong>原子删除全部旧的小 SSTable</strong></p>
+</li>
+</ol>
+<p><strong>核心两大收益</strong></p>
+<p>✅ <strong>控制 SSTable 总数量</strong>，大幅降低读放大，显著提升读取性能</p>
+<p>✅ <strong>真正回收磁盘空间</strong>：彻底物理移除已删除、过期、废弃数据，完成空间回收</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Minor Compaction</th>
+<th>Major Compaction</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>本质</td>
+<td><strong>内存 Memtable → 单个磁盘 SSTable</strong></td>
+<td><strong>多个旧 SSTable → 少量新 SSTable</strong></td>
+</tr>
+<tr>
+<td>频率</td>
+<td>高，持续、频繁触发</td>
+<td>低，定期 &#x2F; 阈值触发（重资源操作）</td>
+</tr>
+<tr>
+<td>主要目标</td>
+<td>释放内存、减少日志重放量</td>
+<td>减少文件数、优化读性能</td>
+</tr>
+<tr>
+<td>数据清理</td>
+<td>不清理删除 &#x2F; 过期数据</td>
+<td>彻底清理墓碑、旧版本、删除数据</td>
+</tr>
+<tr>
+<td>资源开销</td>
+<td>轻量，前台几乎无感</td>
+<td>重度 IO、CPU，后台限速运行</td>
+</tr>
+<tr>
+<td>空间回收</td>
+<td>无</td>
+<td>真正回收磁盘存储空间</td>
+</tr>
+</tbody></table>
+<h2 id="压缩特点"><a href="#压缩特点" class="headerlink" title="压缩特点"></a>压缩特点</h2><ol>
+<li><p><strong>写路径永远高效</strong></p>
+<p> <strong>所有用户写入只走「WAL 日志 + 写入 Memtable」</strong>，不需要直接写磁盘 SSTable，所以 Bigtable <strong>写吞吐极高</strong>。</p>
+</li>
+<li><p><strong>读放大来源</strong></p>
+<p> <strong>读取时要查：活跃 Memtable → 冻结 Memtable → 全部 SSTable</strong></p>
+<p> → <strong>文件越多，读放大会越严重</strong>，这就是 Major Compaction 必须存在的根本原因。</p>
+</li>
+<li><p><strong>层级压缩优化</strong></p>
+<p> 现代 Bigtable 以及衍生系统（HBase、RocksDB、TiDB、CockroachDB）都引入了<strong>分层 Compaction（Leveled Compaction），不再一次性合并全部文件</strong>，进一步削峰、降低业务影响。</p>
+</li>
+<li><p><strong>运维痛点</strong></p>
+<p> Major Compaction 曾经是经典痛点：高峰期触发会引发磁盘 IO 打满、集群抖动，所以系统都会做：后台限速、低峰调度、大小分层策略来规避。</p>
+</li>
+</ol>
+<h1 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h1><h2 id="1-局部性群族"><a href="#1-局部性群族" class="headerlink" title="1. 局部性群族"></a>1. 局部性群族</h2><ul>
+<li><p><strong>用户可以将多个列族组合成一个局部性群族</strong>，Tablet中每个局部性群族都会生产一个SSTable</p>
+</li>
+<li><p><strong>通常不会一起访问的分割成不同局部性群族，可以提高读取效率</strong></p>
+</li>
+<li><p>可以局部性群族为单位专门设定一些调优参数，如是否存储于内存等</p>
+</li>
+</ul>
+<h2 id="2-压缩"><a href="#2-压缩" class="headerlink" title="2. 压缩"></a>2. 压缩</h2><ul>
+<li><p>用户可以控制一个局部性群族的SSTable是否压缩</p>
+</li>
+<li><p>很多用户使用”<strong>两遍可定制</strong>“的压缩方式：</p>
+<ul>
+<li><p>第一遍采用Bentley and Mcllroy（大扫描窗口内常见长字符串压缩）</p>
+</li>
+<li><p>第二遍采用快速压缩算法（小扫描窗口内重复数据）</p>
+</li>
+</ul>
+<p>  这种方式压缩速度达到100- 200MB&#x2F;s , 解压速度达到 400 - 1000MB&#x2F;s，空间压缩比达到10:1</p>
+</li>
+</ul>
+<h2 id="3-缓存"><a href="#3-缓存" class="headerlink" title="3. 缓存"></a>3. 缓存</h2><ul>
+<li><p>Tablet服务器使用<strong>二级缓存策略来提高读操作性能</strong></p>
+<ul>
+<li><p>第一级缓存为 <strong>扫描缓存</strong>：缓存Tablet服务器通过 SSTable接口获取的 Key-Value 对 （时间局部性）</p>
+</li>
+<li><p>第二级缓存为 <strong>块缓存</strong>：缓存从GFS 读取的 SSTable 块 （空间局部性）</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="4-布隆过滤器"><a href="#4-布隆过滤器" class="headerlink" title="4. 布隆过滤器"></a>4. 布隆过滤器</h2><ul>
+<li><p><strong>一个读操作必须读取构成Tablet状态的所有SSTable数据</strong>，故如果这些SSTable不在内存便需多次访问磁盘</p>
+</li>
+<li><p>允许用户<strong>使用一个Bloom过滤器来查询SStable是否包含指定的行和列数据</strong></p>
+<ul>
+<li>付出少量Bloom过滤器内存存储代价，换来显著减少访问磁盘次数</li>
+</ul>
+</li>
+</ul>
+<h2 id="5-Commit-日志实现"><a href="#5-Commit-日志实现" class="headerlink" title="5. Commit 日志实现"></a>5. Commit 日志实现</h2><ul>
+<li><p>如果每个Tablet 操作的Commit日志单独写一个文件，会导致日志文件数目过多</p>
+</li>
+<li><p>优化：<strong>每个Tablet服务器写一个公共的物理日志文件，里面混合了各个Tablet的修改日志</strong></p>
+</li>
+<li><p>这个优化显著提高普通操作性能，却让恢复工作复杂化。</p>
+<ul>
+<li><p>当一台Tablet服务器挂了，需要将其上面的tablet均匀恢复到其他Tablet服务器，则其他服务器都得读取完整的Commit日志。</p>
+</li>
+<li><p>优化：<strong>日志排序</strong>：<strong>为了避免多次读Commit日志，我们将日志按关键字排序<code>(table, row, log_seq)</code>，让同一个Tablet的操作日志在物理上是连续存放的</strong></p>
+<ul>
+<li><strong>恢复时只读取自己的连续段</strong> → 恢复速度极快、不互相干扰</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Bigtable <strong>用「一台服务器一个共享日志」提升写入性能，再用「日志排序」让故障恢复依然高效</strong>，在写入性能和恢复速度之间做到了完美平衡。</p>
+<h2 id="6-Tablet-恢复提速"><a href="#6-Tablet-恢复提速" class="headerlink" title="6. Tablet 恢复提速"></a>6. Tablet 恢复提速</h2><p>Master迁移Tablet时，源Tablet服务器会对这个Tablet做一次Minor Compaction，减少Tablet服务器日志文件没有归并的记录，从而减少了恢复时间</p>
+<p>Master 发起 <strong>Tablet 迁移</strong>（负载均衡、节点下线、故障调度）时：</p>
+<ol>
+<li><p>源 Tablet Server 先对该待迁移 Tablet <strong>主动执行一次 Minor Compaction</strong>；</p>
+</li>
+<li><p>将该 Tablet 内存中未落地的 Memtable 强制刷盘，转为<strong>SSTable</strong>；</p>
+</li>
+<li><p>清空该 Tablet 对应、仅存在于 WAL 日志里的未合并数据。</p>
+</li>
+</ol>
+<p>形成闭环：</p>
+<ul>
+<li><p>平时：WAL 日志共享、多 Tablet 混合写入，提升吞吐；</p>
+</li>
+<li><p>分片分裂：靠元数据表保证一致性；</p>
+</li>
+<li><p>分片迁移：<strong>主动 Minor Compaction 预落地</strong>，清空日志负担；</p>
+</li>
+<li><p>节点宕机：才需要完整解析、截取排序后的共享日志做恢复。</p>
+</li>
+</ul>
+<h2 id="7-利用不变性"><a href="#7-利用不变性" class="headerlink" title="7. 利用不变性"></a>7. 利用不变性</h2><ul>
+<li><p><strong>Bigtable 整个存储架构最核心的基石设计：SSTable 不可变性（Immutability）</strong>，正是这个特性，极大简化了分布式系统的复杂度。</p>
+</li>
+<li><p>Bigtable 利用 SSTable 永久不变的特性，**把复杂的「随机更新、随机修改」难题，彻底转化为「顺序追加、只读合并」的简单问题，**用极简的底层设计支撑了超大规模、高吞吐、高可靠的分布式宽表存储。</p>
+</li>
+</ul>
+<h3 id="Bigtable中不变量"><a href="#Bigtable中不变量" class="headerlink" title="Bigtable中不变量"></a><strong>Bigtable中不变量</strong></h3><ol>
+<li><p><strong>Memtable</strong>：内存可变结构，支持原地更新、删除</p>
+</li>
+<li><p><strong>Minor Compaction 刷盘生成的 SSTable</strong>：<strong>一旦写入磁盘，永远只读、永远不会被修改、不会原地更新</strong></p>
+</li>
+<li><p><strong>Major Compaction 合并生成的新 SSTable</strong>：同样<strong>一经写出，永久不变</strong></p>
+</li>
+<li><p>唯一例外：缓存中的视图、内存索引，不属于磁盘原始 SSTable 本体</p>
+</li>
+</ol>
+<p>所有落地的 SSTable 文件，<strong>只追加、删除，不改动</strong>。</p>
+<h3 id="不可变性带来的系统简化收益"><a href="#不可变性带来的系统简化收益" class="headerlink" title="不可变性带来的系统简化收益"></a><strong>不可变性带来的系统简化收益</strong></h3><h4 id="1-彻底消除并发写入冲突与锁"><a href="#1-彻底消除并发写入冲突与锁" class="headerlink" title="1. 彻底消除并发写入冲突与锁"></a>1. 彻底消除并发写入冲突与锁</h4><ul>
+<li><p>普通 B + 树需要页分裂、原地覆写、大量锁、并发控制、崩溃恢复的复杂逻辑</p>
+</li>
+<li><p>SSTable 不可变：<strong>没有任何修改操作</strong>，读和写完全互不干扰，全程无锁、无页冲突</p>
+</li>
+<li><p>多线程、多客户端同时访问同一个 SSTable，完全不需要加锁保护</p>
+</li>
+</ul>
+<h4 id="2-崩溃恢复极其简单可靠"><a href="#2-崩溃恢复极其简单可靠" class="headerlink" title="2. 崩溃恢复极其简单可靠"></a>2. 崩溃恢复极其简单可靠</h4><ul>
+<li><p>正在写入的只有当前 Memtable 和 WAL 日志</p>
+</li>
+<li><p>已经落盘的 SSTable 永远完好、永远有效</p>
+</li>
+<li><p>宕机重启：仅重放 WAL 恢复 Memtable，<strong>旧 SSTable 完全不用校验、不用修复</strong></p>
+</li>
+<li><p>极大降低故障恢复复杂度、大幅缩短宕机时间</p>
+</li>
+</ul>
+<h4 id="3-读路径极度高效、无副作用"><a href="#3-读路径极度高效、无副作用" class="headerlink" title="3. 读路径极度高效、无副作用"></a>3. 读路径极度高效、无副作用</h4><ul>
+<li><p>读操作可以并行扫描多个 SSTable，完全不用担心读到半更新、脏数据</p>
+</li>
+<li><p>可以安全缓存 SSTable 的索引、布隆过滤器、整块数据到内存缓存</p>
+</li>
+<li><p>缓存永远无需失效、更新，因为底层文件永远不变</p>
+</li>
+</ul>
+<h4 id="4-副本与分布式复制大幅简化"><a href="#4-副本与分布式复制大幅简化" class="headerlink" title="4. 副本与分布式复制大幅简化"></a>4. 副本与分布式复制大幅简化</h4><ul>
+<li><p>SSTable 不变，跨机房、跨节点复制就是<strong>纯文件拷贝</strong></p>
+</li>
+<li><p>无需增量同步、增量更新、一致性校验，只要完整复制文件即可</p>
+</li>
+<li><p>Paxos &#x2F; 分布式副本管理逻辑被极大简化</p>
+</li>
+</ul>
+<h4 id="5-Compaction-实现逻辑干净优雅"><a href="#5-Compaction-实现逻辑干净优雅" class="headerlink" title="5. Compaction 实现逻辑干净优雅"></a>5. Compaction 实现逻辑干净优雅</h4><ul>
+<li><p>删除、更新都<strong>不改动旧文件</strong>，只追加新 SSTable、墓碑标记 (Tombstone)</p>
+</li>
+<li><p>Major Compaction：只读多路归并、生成全新干净 SSTable</p>
+</li>
+<li><p>旧文件在新文件完全生效后，一次性原子删除即可</p>
+</li>
+</ul>
+<h4 id="6-轻松实现多版本、时间旅行"><a href="#6-轻松实现多版本、时间旅行" class="headerlink" title="6. 轻松实现多版本、时间旅行"></a>6. 轻松实现多版本、时间旅行</h4><ul>
+<li><p>旧版本数据永远保存在旧 SSTable 中，不会被改动覆盖</p>
+</li>
+<li><p>天然支持按时间戳读取历史快照、回溯任意时间点数据</p>
+</li>
+</ul>
+<h3 id="代价与权衡"><a href="#代价与权衡" class="headerlink" title="代价与权衡"></a>代价与权衡</h3><ul>
+<li><p><strong>写放大</strong>：更新 &#x2F; 删除不会原地覆盖，只会追加新数据，旧垃圾需要 Major Compaction 清理</p>
+</li>
+<li><p><strong>读放大</strong>：一次读需要合并多个 SSTable 的结果，需要靠缓存、布隆过滤器、定期 Major Compaction 抵消</p>
+</li>
+<li><p><strong>空间放大</strong>：短时间内会存在较多重复、过期数据</p>
+</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Lwaiz.github.io">Leo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://lwaiz.github.io/2026/05/08/BigTable/">https://lwaiz.github.io/2026/05/08/BigTable/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Lwaiz.github.io" target="_blank">Leo's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><a class="post-meta__tags" href="/tags/%E5%AD%98%E5%82%A8/">存储</a><a class="post-meta__tags" href="/tags/Bigtable/">Bigtable</a></div><div class="post-share"><div class="social-share" data-image="/img/background/bg3.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/05/08/GFS/" title="GFS"><img class="cover" src="/img/background/bg3.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">GFS</div></div><div class="info-2"><div class="info-item-1">Google File System (GFS) 是由 Google 在 2003 年提出的分布式文件系统，专为大规模数据密集型应用（如搜索引擎、日志存储）设计。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文"><img class="cover" src="/img/background/bg6.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Spanner论文</div></div><div class="info-2"><div class="info-item-1">Spanner 论文解读Spanner 是 Google 在 2013 年发表于 ACM TOCS 的经典论文，系统介绍了 Google 自研的全球分布式、可扩展、多版本、同步复制 数据库 Spanner，核心突破是全球规模下实现外部一致性分布式事务。 CnBlogs - Spanner 总结 知乎 - 浅谈Spanner 设计目标Spanner 是 Google 面向全球跨数据中心场景设计的数据库，解决 Bigtable、Megastore 等系统的痛点：  支持半关系型表结构 + SQL 类查询语言  全球数据分片、自动复制、故障自动切换  首个在全球规模实现外部一致性的分布式系统  支持多版本、无锁快照读、原子 schema 变更   设计目标：可扩展性 + 高可用 + 强一致 + 全球分布。 整体架构Spanner 以 Universe 为部署单元，内部按 Zone 划分（类似数据中心部署单元）。 核心组件 Zonemaster：给 SpanServer 分配数据  SpanServer：核心服务节点，负责数据读写  Location Proxy：客户端路由，找到对应 S...</div></div></div></a><a class="pagination-related" href="/2026/05/08/Paxos%E8%AE%BA%E6%96%87/" title="Paxos论文"><img class="cover" src="/img/background/bg2.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Paxos论文</div></div><div class="info-2"><div class="info-item-1">The Paxos algorithm, when presented in plain English, is very simple. 2.1 The Problem假设有一组可以提议值的进程。共识算法需要保证：在所有被提议的值中，仅有一个值会被选定。如果没有任何值被提议，则不应选定任何值；一旦某个值被选定，进程应当能够获知这个被选定的值。 共识算法的安全性要求如下：  只有被提议过的值，才可能被选定；  最终只会有一个值被选定；  进程绝不会错误地 “认为” 某个值已被选定，除非该值确实已被选定。   共识算法中的三个角色：提议者（Proposer）、接受者（Acceptor）、学习者（Learner）。 采用经典的异步、非拜占庭模型，该模型满足：  代理以任意速度运行，可能因停机而故障，也可以重启。由于所有代理都可能在某个值被选定后发生故障并重启，因此必须要求代理在故障重启后能够保留部分信息，否则算法无法正确运行。  消息的传输延迟可以任意长，可能重复，也可能丢失，但不会被篡改。   2.2 Choosing a ValuePaxos 算法的核心灵魂，Lamport 没有...</div></div></div></a><a class="pagination-related" href="/2026/05/08/Spanner/" title="Spanner"><img class="cover" src="/img/background/bg5.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Spanner</div></div><div class="info-2"><div class="info-item-1">SpannerSpanner 是 Google 自研的全球分布式、强一致、多版本、同步复制的 NewSQL 数据库，核心突破是在跨地域 &#x2F; 全球规模下，实现外部一致性（线性一致性）的分布式事务，兼顾关系型数据库的事务 &#x2F; SQL 能力与分布式系统的可扩展性、高可用。  Corbett J C, Dean J, Epstein M, et al. Spanner: Google’s globally distributed database[J]. ACM Transactions on Computer Systems (TOCS), 2013, 31(3): 1-22.  核心定位与设计目标 解决痛点：传统分布式数据库要么强一致但难扩展、要么高扩展但弱一致；Spanner 做到全球分布 + 强一致 + 高可用 + SQL&#x2F;ACID 事务。  核心能力：  跨数据中心 &#x2F; 大洲的同步复制、自动故障转移  全局外部一致性（External Consistency）：事务提交顺序与真实时间顺序一致，后提交的事务一定能看到先提交事务的结果。  支...</div></div></div></a><a class="pagination-related" href="/2026/05/08/Paxos/" title="Paxos"><img class="cover" src="/img/background/bg3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Paxos</div></div><div class="info-2"><div class="info-item-1">Paxos 共识算法 Lamport L. Paxos made simple[J]. ACM SIGACT News (Distributed Computing Column) 32, 4 (Whole Number 121, December 2001), 2001: 51-58.   Basic Paxos 算法：描述多节点之间如何就单个值（value）达成共识。  Multi-Paxos 思想：通过执行多个 Basic Paxos 实例，就一系列值达成共识。   针对非拜占庭场景（无恶意节点），除 Raft 外，ZAB 协议、Fast Paxos 等都是基于 Paxos 改进的共识算法。 针对拜占庭场景（存在恶意节点），通常使用 工作量证明（PoW，Proof-of-Work）、权益证明（PoS，Proof-of-Stake） 等共识算法，典型应用为区块链系统。 Basic Paxos角色定义Basic Paxos 中存在 3 个重要的角色：  提议者（Proposer）：也可以叫做协调者（coordinator），负责接受客户端请求并发起提案。提案信息通常包括提案编号...</div></div></div></a><a class="pagination-related" href="/2026/05/08/GFS/" title="GFS"><img class="cover" src="/img/background/bg3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">GFS</div></div><div class="info-2"><div class="info-item-1">Google File System (GFS) 是由 Google 在 2003 年提出的分布式文件系统，专为大规模数据密集型应用（如搜索引擎、日志存储）设计。</div></div></div></a><a class="pagination-related" href="/2026/05/08/Raft%E8%AE%BA%E6%96%87/" title="Raft论文"><img class="cover" src="/img/background/bg8.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Raft论文</div></div><div class="info-2"><div class="info-item-1">Raft 论文解读Raft 将可理解性作为第一优先级 1. IntroductionRaft 的核心设计思路是强领导者模型，先选举出集群中唯一的领导者，由领导者全权负责复制日志的管理。 将复杂的共识问题，分解为三个相对独立、可分别解决的子问题：领导者选举、日志复制、安全性，通过分解大幅提升了算法的可理解性。  强领导者模型：日志只能从 Leader 流向 Follower，逻辑超级简单。  随机超时选举：用随机化选举超时时间避免投票分裂，选主快、不打架。  **安全的集群成员变更：**用 “重叠多数派” 保证加节点、减节点时不会脑裂。   2. Replicated state machines复制状态机 复制状态机 &#x3D; 让多台机器像一台机器一样干活，数据完全一样，坏几台也不影响。 共识算法，通常就是为了复制状态机而设计的。  复制状态机一般通过复制日志实现。每台服务器都保存一份日志，日志中包含一系列命令，状态机按顺序执行这些命令。 所有日志都包含相同顺序的相同命令，因此所有状态机都会处理完全一致的命令序列。由于状态机是确定性的，每台机器最终都会计算出相同的状态，并输出...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leo</div><div class="author-info-description">Leo的个人博客，记录技术和生活点滴。</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Lwaiz"><i class="fab fa-github"></i><span>关注我</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Lwaiz" target="_blank" title="GitHub"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到我的博客</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Bigtable"><span class="toc-text">Bigtable</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="toc-text">数据存储格式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Row-Key-%E8%A1%8C%E9%94%AE"><span class="toc-text">Row Key 行键</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Column-Family-%E5%88%97%E6%97%8F"><span class="toc-text">Column Family 列族</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Time-Stamp-%E6%97%B6%E9%97%B4%E6%88%B3"><span class="toc-text">Time Stamp 时间戳</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cell-%E5%8D%95%E5%85%83%E6%A0%BC"><span class="toc-text">Cell 单元格</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9E%84%E5%BB%BA%E5%9D%97"><span class="toc-text">构建块</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#BigTable-%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="toc-text">BigTable 基本结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Master"><span class="toc-text">Master</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Tablet-Server-%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="toc-text">Tablet Server 服务器</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Tablet-%E4%BD%8D%E7%BD%AE%E5%AF%BB%E5%9D%80%E6%9E%B6%E6%9E%84"><span class="toc-text">Tablet 位置寻址架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E5%B1%82%EF%BC%9AChubby%E6%96%87%E4%BB%B6-%EF%BC%88%E5%85%A8%E5%B1%80%E5%85%A5%E5%8F%A3%EF%BC%89"><span class="toc-text">第一层：Chubby文件 （全局入口）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82%EF%BC%9ARoot-Tablet-%EF%BC%88META-0%EF%BC%89"><span class="toc-text">第二层：Root Tablet （META 0）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E5%B1%82%EF%BC%9AOther-METADATA-Tablet-%EF%BC%88META1%EF%BC%89"><span class="toc-text">第三层：Other METADATA Tablet （META1）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E5%9B%9B%E5%B1%82%EF%BC%9AUser-Tablets-%E6%95%B0%E6%8D%AE%E8%A1%A8%E5%88%86%E7%89%87"><span class="toc-text">第四层：User Tablets 数据表分片</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E5%9D%80%E6%B5%81%E7%A8%8B"><span class="toc-text">寻址流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E4%BC%98%E5%8A%BF"><span class="toc-text">设计优势</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E5%88%86%E5%B1%82"><span class="toc-text">物理存储分层</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Tablet-%E5%88%86%E9%85%8D"><span class="toc-text">Tablet 分配</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Master%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="toc-text">Master启动流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Tablet%E5%88%86%E8%A3%82"><span class="toc-text">Tablet分裂</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Tablet%E5%88%86%E8%A3%82%E6%B5%81%E7%A8%8B"><span class="toc-text">Tablet分裂流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E8%A3%82%E6%95%85%E9%9A%9C%E5%9C%BA%E6%99%AF"><span class="toc-text">分裂故障场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A2%AB%E5%8A%A8%E6%81%A2%E5%A4%8D%E6%B5%81%E7%A8%8B"><span class="toc-text">被动恢复流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E4%BC%98%E5%8A%BF-1"><span class="toc-text">设计优势</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Tablet-%E6%9C%8D%E5%8A%A1"><span class="toc-text">Tablet 服务</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8E%8B%E7%BC%A9-Compaction"><span class="toc-text">压缩 Compaction</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Minor-Compaction-%EF%BC%88%E5%B0%8F%E5%B9%85%E5%90%88%E5%B9%B6-%E5%86%85%E5%AD%98%E5%88%B7%E7%9B%98%EF%BC%89"><span class="toc-text">1. Minor Compaction （小幅合并 &#x2F; 内存刷盘）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Major-Compaction%EF%BC%88%E5%A4%A7%E5%B9%85%E5%90%88%E5%B9%B6-SSTable%E9%87%8D%E5%86%99%E5%90%88%E5%B9%B6%EF%BC%89"><span class="toc-text">2. Major Compaction（大幅合并&#x2F;SSTable重写合并）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%8B%E7%BC%A9%E7%89%B9%E7%82%B9"><span class="toc-text">压缩特点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BC%98%E5%8C%96"><span class="toc-text">优化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%B1%80%E9%83%A8%E6%80%A7%E7%BE%A4%E6%97%8F"><span class="toc-text">1. 局部性群族</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%8E%8B%E7%BC%A9"><span class="toc-text">2. 压缩</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%BC%93%E5%AD%98"><span class="toc-text">3. 缓存</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="toc-text">4. 布隆过滤器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-Commit-%E6%97%A5%E5%BF%97%E5%AE%9E%E7%8E%B0"><span class="toc-text">5. Commit 日志实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-Tablet-%E6%81%A2%E5%A4%8D%E6%8F%90%E9%80%9F"><span class="toc-text">6. Tablet 恢复提速</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E5%88%A9%E7%94%A8%E4%B8%8D%E5%8F%98%E6%80%A7"><span class="toc-text">7. 利用不变性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Bigtable%E4%B8%AD%E4%B8%8D%E5%8F%98%E9%87%8F"><span class="toc-text">Bigtable中不变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%80%A7%E5%B8%A6%E6%9D%A5%E7%9A%84%E7%B3%BB%E7%BB%9F%E7%AE%80%E5%8C%96%E6%94%B6%E7%9B%8A"><span class="toc-text">不可变性带来的系统简化收益</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%BD%BB%E5%BA%95%E6%B6%88%E9%99%A4%E5%B9%B6%E5%8F%91%E5%86%99%E5%85%A5%E5%86%B2%E7%AA%81%E4%B8%8E%E9%94%81"><span class="toc-text">1. 彻底消除并发写入冲突与锁</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%B4%A9%E6%BA%83%E6%81%A2%E5%A4%8D%E6%9E%81%E5%85%B6%E7%AE%80%E5%8D%95%E5%8F%AF%E9%9D%A0"><span class="toc-text">2. 崩溃恢复极其简单可靠</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E8%AF%BB%E8%B7%AF%E5%BE%84%E6%9E%81%E5%BA%A6%E9%AB%98%E6%95%88%E3%80%81%E6%97%A0%E5%89%AF%E4%BD%9C%E7%94%A8"><span class="toc-text">3. 读路径极度高效、无副作用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E5%89%AF%E6%9C%AC%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E5%A4%8D%E5%88%B6%E5%A4%A7%E5%B9%85%E7%AE%80%E5%8C%96"><span class="toc-text">4. 副本与分布式复制大幅简化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-Compaction-%E5%AE%9E%E7%8E%B0%E9%80%BB%E8%BE%91%E5%B9%B2%E5%87%80%E4%BC%98%E9%9B%85"><span class="toc-text">5. Compaction 实现逻辑干净优雅</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-%E8%BD%BB%E6%9D%BE%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%89%88%E6%9C%AC%E3%80%81%E6%97%B6%E9%97%B4%E6%97%85%E8%A1%8C"><span class="toc-text">6. 轻松实现多版本、时间旅行</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E4%BB%B7%E4%B8%8E%E6%9D%83%E8%A1%A1"><span class="toc-text">代价与权衡</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/BigTable/" title="Bigtable"><img src="/img/background/bg3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Bigtable"/></a><div class="content"><a class="title" href="/2026/05/08/BigTable/" title="Bigtable">Bigtable</a><time datetime="2026-05-08T12:22:16.000Z" title="发表于 2026-05-08 20:22:16">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/GFS/" title="GFS"><img src="/img/background/bg3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="GFS"/></a><div class="content"><a class="title" href="/2026/05/08/GFS/" title="GFS">GFS</a><time datetime="2026-05-08T12:20:09.000Z" title="发表于 2026-05-08 20:20:09">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/OB%E7%9F%A5%E8%AF%86/" title="OceanBase 基础了解"><img src="/img/background/bg4.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OceanBase 基础了解"/></a><div class="content"><a class="title" href="/2026/05/08/OB%E7%9F%A5%E8%AF%86/" title="OceanBase 基础了解">OceanBase 基础了解</a><time datetime="2026-05-08T12:16:51.000Z" title="发表于 2026-05-08 20:16:51">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文"><img src="/img/background/bg6.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Spanner论文"/></a><div class="content"><a class="title" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文">Spanner论文</a><time datetime="2026-05-08T08:36:28.000Z" title="发表于 2026-05-08 16:36:28">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Spanner/" title="Spanner"><img src="/img/background/bg5.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Spanner"/></a><div class="content"><a class="title" href="/2026/05/08/Spanner/" title="Spanner">Spanner</a><time datetime="2026-05-08T08:35:28.000Z" title="发表于 2026-05-08 16:35:28">2026-05-08</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Leo</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><script src="/js/tw_cn.js?v=5.5.4"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script><meting-js server="netease" type="playlist" id="964806107" fixed="true" autoplay="false" loop="all" theme="#49b1f5" lrcFolded="true"> </meting-js><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || item.innerHTML || ""
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    if (e.request.status === 404) {
+      false
+        ? pjax.loadUrl('/404.html')
+        : window.location.href = e.request.responseURL
+    }
+  })
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

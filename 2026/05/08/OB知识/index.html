@@ -1,0 +1,1271 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>OceanBase 基础了解 | Leo's Blog</title><meta name="author" content="Leo"><meta name="copyright" content="Leo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="OceanBase知识OceanBase - OceanBase 数据库整体架构 OB 的特性如下：  透明可扩展: OB整体做了存算分离，在总控的帮助下可以按需伸缩，伸缩后自动做负载均衡。  极致高可用： 通过Paxos来实现的高可用，可以保证数据的一致性和完整性。支持单机房、双机房、两地三中心、三地五中心部署。支持基于日志复制的主备库  混合事务和分析处理：同时支持 OLAP 和 OLTP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OceanBase 基础了解">
+<meta property="og:url" content="https://lwaiz.github.io/2026/05/08/OB%E7%9F%A5%E8%AF%86/index.html">
+<meta property="og:site_name" content="Leo&#39;s Blog">
+<meta property="og:description" content="OceanBase知识OceanBase - OceanBase 数据库整体架构 OB 的特性如下：  透明可扩展: OB整体做了存算分离，在总控的帮助下可以按需伸缩，伸缩后自动做负载均衡。  极致高可用： 通过Paxos来实现的高可用，可以保证数据的一致性和完整性。支持单机房、双机房、两地三中心、三地五中心部署。支持基于日志复制的主备库  混合事务和分析处理：同时支持 OLAP 和 OLTP">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lwaiz.github.io/img/background/bg4.png">
+<meta property="article:published_time" content="2026-05-08T12:16:51.000Z">
+<meta property="article:modified_time" content="2026-05-08T12:19:27.160Z">
+<meta property="article:author" content="Leo">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://lwaiz.github.io/img/background/bg4.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "OceanBase 基础了解",
+  "url": "https://lwaiz.github.io/2026/05/08/OB%E7%9F%A5%E8%AF%86/",
+  "image": "https://lwaiz.github.io/img/background/bg4.png",
+  "datePublished": "2026-05-08T12:16:51.000Z",
+  "dateModified": "2026-05-08T12:19:27.160Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leo",
+      "url": "https://Lwaiz.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://lwaiz.github.io/2026/05/08/OB%E7%9F%A5%E8%AF%86/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":true,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'OceanBase 基础了解',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/style.css" media="all"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css"><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/shuoshuo/"><i class="fa-fw fas fa-comment-dots"></i><span> 随笔</span></a></div><div class="menus_item"><a class="site-page" href="/profile/"><i class="fa-fw fas fa-user"></i><span> 个人中心</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/background/bg4.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/avatar.png" alt="Logo"><span class="site-name">Leo's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">OceanBase 基础了解</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/shuoshuo/"><i class="fa-fw fas fa-comment-dots"></i><span> 随笔</span></a></div><div class="menus_item"><a class="site-page" href="/profile/"><i class="fa-fw fas fa-user"></i><span> 个人中心</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">OceanBase 基础了解</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-08T12:16:51.000Z" title="发表于 2026-05-08 20:16:51">2026-05-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-08T12:19:27.160Z" title="更新于 2026-05-08 20:19:27">2026-05-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/">技术笔记</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="OceanBase知识"><a href="#OceanBase知识" class="headerlink" title="OceanBase知识"></a>OceanBase知识</h1><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005682187">OceanBase - OceanBase 数据库整体架构</a></p>
+<p>OB 的特性如下：</p>
+<ul>
+<li><p><strong>透明可扩展</strong>: OB整体做了存算分离，在总控的帮助下可以按需伸缩，伸缩后自动做负载均衡。</p>
+</li>
+<li><p><strong>极致高可用</strong>： 通过Paxos来实现的高可用，可以保证数据的一致性和完整性。支持单机房、双机房、两地三中心、三地五中心部署。支持基于日志复制的主备库</p>
+</li>
+<li><p><strong>混合事务和分析处理</strong>：同时支持 OLAP 和 OLTP</p>
+</li>
+<li><p><strong>多租户</strong>：支持单集群多租户，基于租户来实现资源隔离</p>
+</li>
+<li><p><strong>高兼容性</strong>：支持 MySQL和 Oracle 语法</p>
+</li>
+<li><p><strong>完整自主知识产权</strong>：好</p>
+</li>
+<li><p><strong>高性能</strong>：准内存数据库，基于 LSM Tree 实现读写性能优化，支持强一致性事务</p>
+</li>
+<li><p><strong>安全性</strong>： 支持各类安全需求。</p>
+</li>
+</ul>
+<h1 id="OB概述"><a href="#OB概述" class="headerlink" title="OB概述"></a>OB概述</h1><p>OceanBase 数据库（OceanBase Database）是一款完全自研的企业级原生分布式数据库，在普通硬件上实现金融级高可用，首创“三地五中心”城市级故障自动无损容灾新标准，刷新 TPC-C 标准测试，单集群规模超过 1500 节点，具有云原生、强一致性、高度兼容 Oracle&#x2F;MySQL 等特性。</p>
+<h2 id="核心特性"><a href="#核心特性" class="headerlink" title="核心特性"></a>核心特性</h2><h3 id="高可用"><a href="#高可用" class="headerlink" title="高可用"></a>高可用</h3><p>独创 <strong>“三地五中心” 容灾架构</strong>方案，建立金融行业无损容灾新标准。支持同城&#x2F;异地容灾，可<strong>实现多地多活</strong>，满足金融行业 6 级容灾标准（RPO&#x3D;0，RTO&lt; 8s），数据零丢失。</p>
+<h3 id="高兼容"><a href="#高兼容" class="headerlink" title="高兼容"></a>高兼容</h3><p><strong>高度兼容 Oracle 和 MySQL</strong>，覆盖绝大多数常见功能，支持过程语言、触发器等高级特性，<strong>提供自动迁移工具</strong>，支持迁移评估和反向同步以保障数据迁移安全，可支撑金融、政府、运营商等关键行业核心场景替代。</p>
+<h3 id="水平扩展"><a href="#水平扩展" class="headerlink" title="水平扩展"></a>水平扩展</h3><p><strong>实现透明水平扩展</strong>，支持业务<strong>快速的扩容缩容</strong>，同时通过准内存处理架构实现高性能。支持集群节点超过数千个，单集群最大数据量超过 3PB，最大单表行数达万亿级。</p>
+<h3 id="低成本"><a href="#低成本" class="headerlink" title="低成本"></a>低成本</h3><p><strong>基于 LSM-Tree 的高压缩引擎</strong>，存储成本降低 70% - 90%；<strong>原生支持多租户架构</strong>，同一集群可为多个独立业务提供服务，<strong>租户间数据隔离</strong>，降低部署和运维成本。</p>
+<h3 id="实时-HTAP"><a href="#实时-HTAP" class="headerlink" title="实时 HTAP"></a>实时 HTAP</h3><p>基于“同一份数据，同一个引擎”，<strong>同时支持在线 实时交易 TP 及 实时分析 AP 两种场景</strong>，“一份数据”的多个副本可以存储成多种形态，用于不同工作负载，从根本上保持数据一致性。</p>
+<h3 id="安全可靠"><a href="#安全可靠" class="headerlink" title="安全可靠"></a>安全可靠</h3><p>自 2010 年开始<strong>完全自主研发</strong>，代码级可控，<strong>自研单机分布式一体化架构</strong>，连续多年通过大规模金融核心场景的可靠性验证；完备的角色权限管理体系，<strong>数据存储和通信全链路透明加密</strong>，支持国密算法，通过等保三级专项合规检测。</p>
+<h3 id="共享存储"><a href="#共享存储" class="headerlink" title="共享存储"></a>共享存储</h3><p><strong>共享存储（Shared-Storage）形态下，计算节点和数据存储完全分离</strong>，存储可按需购买，计算节点可灵活扩缩容，从而实现极致的资源弹性与成本优化，并支持 AP、TP、KV 全产品形态。</p>
+<hr>
+<h2 id="产品架构"><a href="#产品架构" class="headerlink" title="产品架构"></a>产品架构</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/f80407515/article/details/128225287">CSDN - OceanBase-概述</a></p>
+<p>OceanBase 社区版数据库内核开源， 与 MySQL 兼容，对接虚拟化和大数据技术及产品，支持多种图形化的开发工具、运维监控工具和数据迁移工具；同时社区版提供开放的接口和丰富的生态能力，支持企业或个人更好的实现定制化业务需求。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image.png" alt="image.png"></p>
+<p>OceanBase 企业版（OceanBase Database）是一款完全自研的企业级原生分布式数据库，在普通硬件上实现金融级高可用，首创“三地五中心”城市级故障自动无损容灾新标准，刷新 TPC-C 标准测试，单集群 规模超过 1500 节点，具有云原生、强一致性、高度兼容 Oracle&#x2F;MySQL 等特性。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_1.png" alt="image_1.png"></p>
+<h3 id="迁移评估工具-OMA"><a href="#迁移评估工具-OMA" class="headerlink" title="迁移评估工具 OMA"></a><strong>迁移评估工具 OMA</strong></h3><p>OceanBase 迁移评估工具 （OceanBase Migration Assessment，OMA）是 OceanBase 提供的数据库迁移评估的产品，为数据迁移提供精准的兼容性评估、高效的性能评估以及应用逻辑改造建议。OMA 支持评估Oracle 、DB2 LUW、PostgreSQL 等多种数据库与 OceanBase 的兼容情况，提供画像分析和自动转换方案；支持应用负载回放功能，帮助客户预知迁移后可能的性能风险并提供优化方案；OMA 还支持评估 C、Java 业务代码以及驱动的兼容性以助力用户高效率、低成本迁移至OceanBase。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_2.png" alt="image.png"></p>
+<h3 id="迁移工具-OMS"><a href="#迁移工具-OMS" class="headerlink" title="迁移工具 OMS"></a><strong>迁移工具 OMS</strong></h3><p>OceanBase 数据迁移工具（OceanBase Migration Service，OMS）是 OceanBase 数据库一站式数据传输和同步的产品。它支持多种关系型数据库、消息队列与 OceanBase 数据库之间的数据复制，是集数据迁移、实时数据同步和增量数据订阅于一体的数据传输服务，OMS 帮助您低风险、低成本、高效率的实现 OceanBase 的数据流通，助力构建安全、稳定、高效的数据复制架构。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_3.png" alt="image.png"></p>
+<h3 id="开发工具-ODC"><a href="#开发工具-ODC" class="headerlink" title="开发工具 ODC"></a><strong>开发工具 ODC</strong></h3><p>OceanBase 开发者工具（OceanBase Developer Center，ODC）作为 OceanBase 数据库量身打造的企业级数据库开发平台，旨在帮助企业安全、高效的使用数据库。您可通过 ODC 创建和管理数据库中的表、视图等 10 余种数据库对象。基于 WebSQL，ODC 提供了 SQL 窗口和匿名块窗口作为数据库开发者开发和诊断 SQL 和 PL&#x2F;SQL 的工作区。您还可为指定角色分配对应资源及该资源的访问权限，企业内不同角色间的开发协作亦会变得简单可控。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_4.png" alt="image.png"></p>
+<h3 id="运维工具-OCP"><a href="#运维工具-OCP" class="headerlink" title="运维工具 OCP"></a><strong>运维工具 OCP</strong></h3><p>OceanBase 运维管理工具（OceanBase Control Platform ，OCP）是一款为 OceanBase 数据库集群量身打造的企业级管理平台，兼容 OceanBase 所有主流版本。OCP 提供对 OceanBase 集群的图形化管理能力，包括数据库组件及相关资源的全生命周期管理、监控告警、性能诊断、故障恢复、备份恢复等，旨在协助客户更加高效地管理 OceanBase 数据库，降低企业的IT运维成本和用户的学习成本。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_5.png" alt="image.png"></p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_6.png" alt="image.png"></p>
+<h3 id="自治服务工具-OAS"><a href="#自治服务工具-OAS" class="headerlink" title="自治服务工具 OAS"></a>自治服务工具 OAS</h3><p>OceanBase Autonomy Service (OAS)</p>
+<p>OAS 是 OceanBase 面向开发、运维、DBA 的一站式智能诊断自治服务，为用户提供可视化监控、性能优化、故障诊断、安全管理、容量管理等能力，帮助用户更简单、更低成本、更高性能的使用 OceanBase 数据库。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_7.png" alt="image.png"></p>
+<hr>
+<hr>
+<h1 id="部署模式"><a href="#部署模式" class="headerlink" title="部署模式"></a>部署模式</h1><p>OceanBase 数据库支持<strong>无共享（Shared-Nothing，SN）模式</strong> 和 <strong>共享存储（Shared-Storage，SS）模式</strong>两种部署模式。</p>
+<h3 id="1-无共享模式-Shared-Nothing，SN"><a href="#1-无共享模式-Shared-Nothing，SN" class="headerlink" title="1. 无共享模式 (Shared Nothing，SN)"></a>1. 无共享模式 (Shared Nothing，SN)</h3><p>SN 模式：本地存储、存算一体、对等节点、机房 &#x2F; 机架级容灾，传统分布式交易场景。</p>
+<p><strong>1.节点特性</strong></p>
+<ul>
+<li><p><strong>所有节点完全对等，无特殊角色</strong>、无主次硬件差异。</p>
+</li>
+<li><p>单节点独立具备完整能力：SQL 引擎 + 存储引擎 + 事务引擎。</p>
+</li>
+</ul>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_8.png" alt="image.png"></p>
+<p><strong>2. 硬件与存储</strong></p>
+<ul>
+<li><p>基于普通 PC 服务器集群部署，硬件要求通用、成本低；</p>
+</li>
+<li><p><strong>存算绑定，依赖节点本地磁盘存储数据、事务 Redo 日志。</strong></p>
+</li>
+</ul>
+<p><strong>3. 核心进程</strong></p>
+<ul>
+<li><p>集群所有服务器统一运行单进程实例：<strong>observer</strong>。</p>
+</li>
+<li><p>使用本地的文件存储数据和事务 Redo 日志。</p>
+</li>
+</ul>
+<p><strong>4. 可用区 Zone 机制</strong></p>
+<ul>
+<li><p>Zone 为<strong>逻辑隔离单元</strong>，由多台服务器组成；</p>
+</li>
+<li><p>同机房部署：Zone 对应同一机架 &#x2F; 交换机；</p>
+</li>
+<li><p>多机房部署：Zone 对应独立数据中心 IDC。</p>
+</li>
+</ul>
+<p><strong>5. 多副本与一致性</strong></p>
+<ul>
+<li><p>数据跨可用区存储多副本，兼顾故障容灾、分担读压力；</p>
+</li>
+<li><p>规则：<strong>单可用区内同一租户仅 1 份副本，多可用区实现多副本</strong>；</p>
+</li>
+<li><p>副本间通过 <strong>Paxos 协议</strong> 保障分布式强一致。</p>
+</li>
+</ul>
+<p><strong>6. 多租户能力</strong></p>
+<ul>
+<li><p>原生内置多租户，单租户等价独立数据库实例；</p>
+</li>
+<li><p>租户可自定义数据分布、副本数量、副本类型；</p>
+</li>
+<li><p>租户间 CPU、内存、IO 资源 <strong>强隔离</strong>，互不干扰。</p>
+</li>
+</ul>
+<p><strong>7. 架构优势</strong></p>
+<ul>
+<li>高扩展、高可用、高性能、低成本、兼容主流数据库。</li>
+</ul>
+<h3 id="2-共享存储模式-SS-Sahred-Storage"><a href="#2-共享存储模式-SS-Sahred-Storage" class="headerlink" title="2. 共享存储模式 (SS &#x2F; Sahred Storage)"></a>2. 共享存储模式 (SS &#x2F; Sahred Storage)</h3><p>SS 模式：共享对象存储、存算分离、本地缓存，云化弹性负载场景。</p>
+<p><strong>1.核心架构</strong></p>
+<ul>
+<li><strong>采用 存算分离 设计，计算与底层存储解耦</strong>。</li>
+</ul>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_9.png" alt="image.png"></p>
+<p><strong>2.数据存储规则</strong></p>
+<ul>
+<li><p><strong>租户 全量数据、日志 统一持久化至 共享对象存储</strong>；</p>
+</li>
+<li><p><strong>本地磁盘仅做 热点数据 + 热点日志 缓存</strong>，节省本地存储开销。</p>
+</li>
+</ul>
+<p><strong>3.适用特点</strong></p>
+<ul>
+<li>云原生适配性强，支持计算节点弹性扩缩容、读写分离。</li>
+</ul>
+<hr>
+<hr>
+<h1 id="OB整体架构"><a href="#OB整体架构" class="headerlink" title="OB整体架构"></a>OB整体架构</h1><p><a target="_blank" rel="noopener" href="https://open.oceanbase.com/blog/10900143">OceanBase - 数据库系列之OceanBase整体架构及安装部署</a></p>
+<h2 id="集群架构"><a href="#集群架构" class="headerlink" title="集群架构"></a>集群架构</h2><p>Region（地域 &#x2F; 城市） → Zone（可用区） →</p>
+<p>OBServer（节点进程） → 分区 &#x2F; 副本 → 分区服务</p>
+<p>全局管控：RootService</p>
+<p>流量入口：ODProxy</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_10.png" alt="image.png"></p>
+<p>OceanBase 整体架构图，包括3个zone，其中ZONE-1中有总控服务主其它ZONE为总控服务备，每个ZONE中又有OBServer数据库服务和分区服务。</p>
+<h3 id="常用术语"><a href="#常用术语" class="headerlink" title="常用术语"></a>常用术语</h3><ul>
+<li><p><strong>Region 区域</strong></p>
+<ul>
+<li><p>跨地域 &#x2F; 跨城市部署的逻辑单元，也叫站点</p>
+</li>
+<li><p>支持多站点、异地多活、城市级容灾</p>
+</li>
+<li><p>一个Region 可以包含多个 Zone</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Zone 可用区</strong></p>
+<ul>
+<li><p>逻辑概念，不是物理机器</p>
+</li>
+<li><p>由一台或多台 运行OBServer进程的服务器组成</p>
+</li>
+<li><p>同机房可按机架&#x2F;交换机 划分 Zone；多机房可按机房划分</p>
+</li>
+</ul>
+</li>
+<li><p><strong>OBServer</strong></p>
+<ul>
+<li><p>OceanBase 数据库<strong>核心服务进程</strong></p>
+</li>
+<li><p>集群每台节点都部署 OBServer，承担SQL、存储、事务、副本能力</p>
+</li>
+</ul>
+</li>
+<li><p><strong>OBProxy 接入代理</strong></p>
+<ul>
+<li><p>专属代理服务，独立进程；</p>
+</li>
+<li><p>接收用户 SQL 请求，<strong>智能路由转发</strong>到最合适的 OBServer；</p>
+</li>
+<li><p>把执行结果回传给应用；</p>
+</li>
+<li><p>屏蔽集群底层分布式细节，应用无感知。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>副本</strong></p>
+<ul>
+<li><p>每个Zone 上只会存 <strong>同一个分区的一个副本</strong></p>
+</li>
+<li><p>副本类型：<strong>全功能副本、日志副本</strong></p>
+</li>
+<li><p>靠多副本 + Paxos 实现高可用、故障容灾</p>
+</li>
+</ul>
+</li>
+<li><p><strong>分区 &amp; Leader &amp; Primary Zone</strong></p>
+<ul>
+<li><p>数据最小分发单位是<strong>分区</strong>，副本以分区为粒度存放</p>
+</li>
+<li><p>同一个分区，跨多个 Zone 存多副本</p>
+</li>
+<li><p><strong>Leader</strong>：分区主副本所在的 OBServer 节点</p>
+</li>
+<li><p><strong>Primary Zone</strong>：分区主副本所在的可用区 Zone</p>
+</li>
+<li><p>读写、强一致查询都走分区 Leader 主副本</p>
+</li>
+</ul>
+</li>
+<li><p><strong>RootService 总控服务</strong></p>
+<ul>
+<li><p>部署在某个 OBServer 上</p>
+</li>
+<li><p>集群内 <strong>1个主 RootService + 多个备用</strong></p>
+</li>
+<li><p>集群全局总管：资源调度、资源分配、数据分布管理、Schema 元数据管理</p>
+</li>
+</ul>
+</li>
+<li><p><strong>分区服务</strong></p>
+<ul>
+<li><p>每个 OBServer 本地都运行分区服务模块</p>
+</li>
+<li><p>负责本机所有分区的管理、操作</p>
+</li>
+<li><p>和 <strong>事务引擎、存储引擎</strong> 深度调用协作，完成分区读写、日志、合并等动作</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="总控服务-RootService"><a href="#总控服务-RootService" class="headerlink" title="总控服务 RootService"></a>总控服务 RootService</h2><p>总控服务负责整个集群的资源调度、资源分配、数据分布信息管理以及Schema管理等功能。</p>
+<p>总控服务 RootServer <strong>运行在 OBserver之上</strong>，集群内只有一个主总控，其余为备用总控，是整个OceanBase<strong>集群的全局管控中心</strong></p>
+<p><strong>核心功能</strong></p>
+<ol>
+<li><p><strong>资源调度</strong></p>
+<p> 负责集群节点与租户资源全生命周期管理</p>
+<ul>
+<li><p>集群中 OBServer 的<strong>添加、下线、删除</strong></p>
+</li>
+<li><p>在OBServer中创建服务器资源规格</p>
+</li>
+<li><p>船舰、分配租户资源，供业务使用</p>
+</li>
+</ul>
+</li>
+<li><p><strong>资源均衡</strong></p>
+<p> 管控资源在集群内 自动打散、迁移</p>
+<ul>
+<li><p>各类资源在 <strong>Zone之间、OBServer节点之间</strong> 进行迁移</p>
+</li>
+<li><p>配合均衡层，保证集群负载均衡</p>
+</li>
+</ul>
+</li>
+<li><p><strong>数据分布管理</strong></p>
+<p> 决定数据放在哪、怎么分布</p>
+<ul>
+<li><p>统一规划 <strong>分区副本</strong> 存放位置</p>
+</li>
+<li><p>决策某一个分区分布在哪些 OBServer 节点</p>
+</li>
+<li><p>管控 Tablet、日志流的分布与迁移策略</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Schema 管理</strong></p>
+<p> 统一管控数据库 结构与DDL</p>
+<ul>
+<li><p>调度、统筹管理所有 <strong>DDL语句 (<strong>建库、建表、改表、删表等</strong>)</strong></p>
+</li>
+<li><p>全局维护集群元数据、表结构、视图、索引等Schema信息</p>
+</li>
+</ul>
+</li>
+</ol>
+<p><strong>RootService（总控）</strong>：<strong>全局宏观管控</strong>，决定分区放哪、调度、均衡、DDL 统筹。</p>
+<h2 id="Partition-Service-分区服务"><a href="#Partition-Service-分区服务" class="headerlink" title="Partition Service 分区服务"></a>Partition Service 分区服务</h2><p>分区服务部署在 <strong>每一台OBServer本地</strong>，是单节点内部 <strong>所有分区的管理模块</strong></p>
+<p><strong>核心职责</strong></p>
+<ol>
+<li><p>管理当前OBServer 上 <strong>所有数据分区</strong> 的生命周期和日常操作</p>
+</li>
+<li><p>负责本及分区的读写、日志、副本同步、合并、迁移等底层动作</p>
+</li>
+<li><p>和本机 <strong>事务引擎、存储引擎</strong> 紧密联动、互相调用，协同完成分区业务处理</p>
+</li>
+</ol>
+<p><strong>PartitionService（分区服务）</strong>：<strong>单节点微观执行</strong>，管好本机每一个分区的具体运行和操作。</p>
+<hr>
+<h2 id="数据分区高可用"><a href="#数据分区高可用" class="headerlink" title="数据分区高可用"></a>数据分区高可用</h2><p>基于 <strong>Paxos 分布式选举算法</strong> 实现分区数据高可用、强一致。</p>
+<p>分区多副本跨 Zone 部署，组内 Paxos 选主、日志同步；写统一走主分区，主分区分散多节点实现多点写入，故障自动选举新主，保障高可用。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_11.png" alt="image.png"></p>
+<ol>
+<li><p><strong>副本分布规则</strong></p>
+<ol start="2">
+<li><p>同一个数据分区，会在<strong>所有Zone上分别存放一个副本</strong></p>
+</li>
+<li><p>多副本之间依靠 <strong>Paxos协议</strong> 做Redo日志同步</p>
+</li>
+<li><p>一个分区 + 它的所有副本，组成 <strong>独立的Paxos 复制组</strong></p>
+</li>
+</ol>
+</li>
+<li><p><strong>主备角色划分</strong></p>
+<ul>
+<li><p><strong>主分区 Leader</strong>：复制组中选举产生的主副本</p>
+</li>
+<li><p><strong>备分区 Follower</strong>：其余所有副本</p>
+</li>
+</ul>
+</li>
+<li><p><strong>读写路由规则</strong></p>
+<p> 所有针对该分区的<strong>写请求</strong>，自动路由到 <strong>主分区 Leader</strong> 执行</p>
+</li>
+<li><p><strong>性能优势：多点写入</strong></p>
+<ul>
+<li><p>不同分区的主分区，可以分散部署在不同 OBServer 节点上</p>
+</li>
+<li><p>业务写请求会打散到多个数据节点，实现 <strong>多点并行写入</strong>，提升整体集群并发性能</p>
+</li>
+</ul>
+</li>
+<li><p><strong>高可用保障</strong></p>
+<ul>
+<li><p>主分区所在节点故障 → Paxos 重新选举 → 从备分区中选出新主分区</p>
+</li>
+<li><p>业务无感知自动切换，保证分区数据不丢、服务不中断</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="存储引擎"><a href="#存储引擎" class="headerlink" title="存储引擎"></a>存储引擎</h2><p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_12.png" alt="image.png"></p>
+<h3 id="LSM-Tree-整体架构"><a href="#LSM-Tree-整体架构" class="headerlink" title="LSM-Tree 整体架构"></a>LSM-Tree 整体架构</h3><ol>
+<li><p><strong>数据分层存放</strong></p>
+<ol start="2">
+<li><p>基线历史数据：持久化在磁盘 <strong>SSTable</strong></p>
+</li>
+<li><p>增量新数据：写入内存 (<strong>MemTable</strong>)</p>
+</li>
+</ol>
+</li>
+<li><p><strong>定时合并机制</strong></p>
+<p> 每天业务低峰期，自动把 <strong>内存增量数据</strong> 合并、落盘，持久化到磁盘 SSTable，形成新的基线</p>
+</li>
+<li><p><strong>DML读写特点</strong></p>
+<ol start="2">
+<li><p>增删改 DML 操作 <strong>先在内存执行</strong></p>
+</li>
+<li><p>读取数据时：需要 **合并内存最新版本 + 磁盘基线版本，**合并数据最新快照返回</p>
+</li>
+</ol>
+</li>
+</ol>
+<h3 id="SSTable-核心概念"><a href="#SSTable-核心概念" class="headerlink" title="SSTable 核心概念"></a>SSTable 核心概念</h3><p>Sorted String Table </p>
+<p>SSTable：磁盘有序不可变 KV 结构，按 Block 组织，尾部索引二分查找，支持 MMap 内存映射加速。</p>
+<ol>
+<li><p><strong>三大特性</strong></p>
+<ol start="2">
+<li><p><strong>持久化：存放在磁盘 SSTable</strong></p>
+</li>
+<li><p><strong>有序：按键有序排列</strong></p>
+</li>
+<li><p><strong>不可变</strong>：<strong>一旦生成不再修改，只能合并生成新 SSTable</strong></p>
+</li>
+</ol>
+</li>
+<li><p><strong>存储结构</strong></p>
+<ol start="6">
+<li><p>键值KV结构，Key、Value 均为任意字节数组</p>
+</li>
+<li><p>支持两大核心能力</p>
+<ol start="8">
+<li><p>根据指定 Key 精确查找</p>
+</li>
+<li><p>按 Key 范围区间遍历</p>
+</li>
+</ol>
+</li>
+</ol>
+<p> <img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_13.png" alt="image.png"></p>
+</li>
+<li><p><strong>内部 Block 结构</strong></p>
+<ol start="2">
+<li><p>SSTable由多个 <strong>Block 块</strong> 组成，典型大小 <strong>64KB</strong></p>
+</li>
+<li><p><strong>所有Block 的索引</strong> 统一存放在 <strong>SSTable尾部</strong></p>
+</li>
+<li><p>打开SSTable时：</p>
+<p> 索引加载进内存 </p>
+<p> → 二分查找定位 Key所在Block磁盘偏移量 </p>
+<p> → 读取磁盘对应块数据</p>
+</li>
+</ol>
+</li>
+<li><p><strong>加速优化：MMap内存映射</strong></p>
+<p> 内存充足时，可通过 <strong>MMap 技术</strong> 把整个 SSTable 映射至内存，省去磁盘IO，查询速度大幅提升</p>
+</li>
+</ol>
+<hr>
+<h2 id="SQL引擎"><a href="#SQL引擎" class="headerlink" title="SQL引擎"></a>SQL引擎</h2><p>OceanBase的SQL引擎分为分为解析器、优化器、执行器三部分。当 SQL 引擎接受到了 SQL 请求后，经过语法解析、语义分析、查询重写、查询优化等一系列过程后，再由执行器来负责执行。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_14.png" alt="image.png"></p>
+<hr>
+<h2 id="ODP代理"><a href="#ODP代理" class="headerlink" title="ODP代理"></a>ODP代理</h2><p>OceanBase Database Proxy（简称 ODP）是OceanBase数据库专用的代理服务器。OceanBase 数据库的用户数据以多副本的形式存放在各个OBServer上，ODP接收用户发出的SQL请求，并将SQL请求转发至最佳目标OBServer，最后将执行结果返回给用户。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_15.png" alt="image.png"></p>
+<hr>
+<hr>
+<h1 id="OB分层架构"><a href="#OB分层架构" class="headerlink" title="OB分层架构"></a>OB分层架构</h1><p>OceanBase 集群的数据库实例内部由不同的组件相互协作，这些组件从底层向上由 <strong>多租户层、存储层、复制层、均衡层、事务层、SQL 层、接入层</strong> 组成。</p>
+<p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005682187">OceanBase - OceanBase 数据库整体架构</a></p>
+<h2 id="多租户层"><a href="#多租户层" class="headerlink" title="多租户层"></a>多租户层</h2><p>多租户：一集群多实例、双数据库兼容、资源强隔离、运维低成本。</p>
+<ol>
+<li><p><strong>设计目的</strong></p>
+<p> 简化多业务数据库大规模部署管理，<strong>降低硬件与运维成本</strong>。</p>
+</li>
+<li><p><strong>租户核心概念</strong></p>
+<ol start="2">
+<li><p><strong>同一集群内可创建多个相互隔离的租户，租户 &#x3D; 独立数据库实例。</strong></p>
+<ol start="3">
+<li>每个租户等同于一个独立的数据库实例</li>
+</ol>
+</li>
+<li><p>租户支持两种兼容模式：</p>
+<ul>
+<li><p>MySQL 租户：可创建用户、Database，体验与原生 MySQL 一致。</p>
+</li>
+<li><p>Oracle 租户：可管理 Schema、管理角色，体验与原生 Oracle 一致。</p>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p><strong>系统租户</strong></p>
+<p> 集群初始化自带 <strong>sys 系统租户</strong>：</p>
+<ul>
+<li><p>固定为 <strong>MySQL 兼容模式</strong>；</p>
+</li>
+<li><p><strong>存储整个集群 核心元数据 ，负责集群管理</strong>。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>资源隔离机制</strong></p>
+<ol start="2">
+<li><p>隔离载体：<strong>每个observer 进程内有多个属于不同租户的虚拟容器</strong> (<strong>资源单元 UNIT</strong> )，限定单租户CPU、内存资源。</p>
+</li>
+<li><p>资源池：每个租户在多个节点上的多个资源单元，共同组成 <strong>资源池</strong>，实现资源统一管控与隔离。</p>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="存储层"><a href="#存储层" class="headerlink" title="存储层"></a>存储层</h2><p>存储核心：Tablet 分片 + 四层 LSM 结构 + 定时合并 + 列编码 + 双层压缩。</p>
+<ol>
+<li><strong>最小存储粒度</strong></li>
+</ol>
+<ul>
+<li><p><strong>以 一张表 &#x2F; 一个分区为数据管理粒度</strong>；</p>
+</li>
+<li><p>单个分区、非分区表，均对应一个独立 <strong>Tablet（数据分片）</strong>。</p>
+</li>
+</ul>
+<ol>
+<li><p><strong>Tablet 四层 LSM-Tree 结构</strong></p>
+<ol start="2">
+<li><p><strong>MemTable</strong></p>
+<p> 内存缓冲区，所有 DML（增删改）优先写入。</p>
+</li>
+<li><p><strong>L0层 Mini SSTable</strong></p>
+<p> MemTable 写满后，落盘转储生成L0。</p>
+</li>
+<li><p><strong>L1层 Minor SSTable</strong></p>
+<p> L0 数量达阈值后，多个 L0 合并生成L1。</p>
+</li>
+<li><p><strong>Major SSTable</strong></p>
+<p> 业务低峰期自动触发全量合并，合并对象：MemTable + L0 + L1，合并成一个 Major SSTable。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>SSTable 物理存储结构</strong></p>
+<ol start="2">
+<li><p><strong>宏块</strong>：每个SSTable由若干个 <strong>2MB</strong> 的 定长宏块组成，<strong>为 SSTable 基础组成单位。</strong></p>
+</li>
+<li><p><strong>微块</strong>：宏块内部由多个不定长微块组成，<strong>是数据编码、压缩的最小单元。</strong></p>
+</li>
+</ol>
+</li>
+<li><p><strong>双层压缩优化</strong></p>
+<ol start="5">
+<li><p>列级编码（内置）</p>
+<p> <strong>Major SSTable的微块在 合并时通过编码方式进行格式转换</strong>：</p>
+<ul>
+<li><p><strong>列内编码</strong>：字典、游程、常量、差值 编码；</p>
+</li>
+<li><p><strong>列间编码</strong>：对多列进行列间等值、子串等规则优化。</p>
+</li>
+</ul>
+<p> 作用：<strong>高压缩率 + 过滤特征，提升查询性能</strong>。</p>
+</li>
+</ol>
+<p>b. 通用无损压缩编码完成后，支持用户自定义压缩算法二次无损压缩，进一步降低存储占用。</p>
+</li>
+</ol>
+<hr>
+<hr>
+<p><strong>数据库SQL操作分类</strong></p>
+<pre><code>---
+
+**DDL  管结构**（建表、改表、删库）
+
+**DML 管数据**（增删改）
+
+**DQL  查数据**（查）
+
+**DCL  管权限**
+
+**TCL   管事务**
+
+---
+
+1. **DDL 数据定义语言（Data Definition Language）**
+
+    - 定义 / 修改 / 删除 数据库、表、索引、视图 等**结构**
+
+    - 常用指令：`CREATE`、`ALTER`、`DROP`、`TRUNCATE`、`RENAME`
+
+1. **DML 数据操纵语言（Data Manipulation Language）**
+
+    - 操作**表里面的数据**（增删改）
+
+    - 常用指令：`INSERT`、`UPDATE`、`DELETE`
+
+1. **DQL 数据查询语言（Data Duery Language）**
+
+    - 查询数据，最常用
+
+    - 常用指令：`SELECT`
+
+1. **DCL 数据控制语言（Data Control Language）**
+
+    - 权限管理、安全控制
+
+    - 常用指令：`GRANT`（授权）、`REVOKE`（回收权限）
+
+1. **TCL 事务控制语言（Transaction Control Language）**
+
+    - 管理事务，保证ACID
+
+    - 常用指令：`COMMIT`、`ROLLBACK`、`SAVEPOINT`
+</code></pre>
+<hr>
+<hr>
+<h2 id="复制层"><a href="#复制层" class="headerlink" title="复制层"></a>复制层</h2><ol>
+<li><p>SN 模式</p>
+<p> 存算一体，日志流与 OBServer 绑定，计算节点同时承担日志存储，Paxos 副本为节点级。</p>
+</li>
+<li><p>SS 模式</p>
+<p> 日志服务独立部署，计算无状态，持久化与计算解耦，弹性更强、云原生适配更好。</p>
+</li>
+</ol>
+<h3 id="无共享-SN-模式-复制层"><a href="#无共享-SN-模式-复制层" class="headerlink" title="无共享 SN 模式 - 复制层"></a>无共享 SN 模式 - 复制层</h3><ol>
+<li><p><strong>核心载体：日志流 LS（Log Stream）</strong></p>
+<ul>
+<li><p><strong>复制层使用日志流（Log Stream，LS）在多副本之间同步状态</strong>。</p>
+</li>
+<li><p><strong>每一个 Tablet 绑定一个固定日志流；</strong></p>
+<p>  <strong>一个日志流可管理多个 Tablet。</strong></p>
+</li>
+<li><p><strong>数据表 DML 产生的 Redo 日志，统一持久化至对应日志流</strong>。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>副本分布与读写规则</strong></p>
+<ul>
+<li><p><strong>日志流多副本跨不同可用区部署，基于共识协议选主；</strong></p>
+</li>
+<li><p>副本角色：<strong>主副本 Leader + 从副本 Follower</strong>；</p>
+</li>
+<li><p>约束：<strong>Tablet 的 DML 写入、强一致性查询，仅在主副本执行。</strong></p>
+</li>
+<li><p>部署特点：每个租户在每台机器一般只部署<strong>一个 LS 主副本</strong>，可承载多个 LS 从副本；日志流总数由 <code>Primary Zone</code>、<code>Locality</code> 配置决定。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>一致性：改进版 Paxos 协议</strong></p>
+<ul>
+<li><p><strong>主副本：本地持久化 Redo 日志 + 同步发送至从副本</strong>；</p>
+</li>
+<li><p><strong>从副本：日志持久化后向主副本应答</strong>；</p>
+</li>
+<li><p>提交条件：<strong>多数派副本持久化成功，Redo日志才算持久化成功；</strong></p>
+</li>
+<li><p>数据同步：<strong>从副本利用 Redo 日志实时回放，与主副本数据保持一致</strong>。</p>
+<ul>
+<li>回放 &#x3D; 照着日志，重新做一遍主副本的所有操作</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>租约 Lease 机制</strong></p>
+<ul>
+<li><p>日志流的主副本选举成为Leader后获取租约（Lease）；</p>
+</li>
+<li><p><strong>正常工作的主副本在租约有效期内会不停通过选举协议延长租约期</strong></p>
+</li>
+<li><p>主副本仅在租约有效期内可承担主节点工作；</p>
+</li>
+<li><p>作用：保障异常场景下的节点切换与数据安全。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>故障自愈与高可用</strong></p>
+<ul>
+<li><p><strong>少于半数的从副本故障：集群服务无影响</strong>；</p>
+</li>
+<li><p><strong>主副本宕机：租约无法续期、自动失效；</strong></p>
+</li>
+<li><p><strong>集群重新选举</strong>，从副本产生新主并颁发租约，快速恢复服务。</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="共享存储-SS-模式-复制层"><a href="#共享存储-SS-模式-复制层" class="headerlink" title="共享存储 SS 模式 - 复制层"></a>共享存储 SS 模式 - 复制层</h3><ol>
+<li><p><strong>核心架构：日志与计算彻底解耦</strong></p>
+<ul>
+<li><p>云原生（Cloud Native）存算分离设计；</p>
+</li>
+<li><p>独立拆分出<strong>分布式日志服务</strong>，专门负责日志持久化、高可用；</p>
+<ul>
+<li><strong>将日志（日志服务）与计算（计算节点，分为读写节点和只读节点）分离</strong></li>
+</ul>
+</li>
+<li><p>计算节点、日志服务节点完全解耦部署。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>组件划分</strong></p>
+<ul>
+<li><p>日志服务 LS：<strong>通过一致性协议同步日志来保障数据持久性（Durability）</strong>，独立多副本、强一致；</p>
+</li>
+<li><p>计算节点：<strong>计算节点个数保障服务可用性（Availability）</strong>，分为：</p>
+<ul>
+<li><p>RW 读写节点（主节点）</p>
+</li>
+<li><p>RO 只读节点</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>日志同步与读写逻辑</strong></p>
+<ul>
+<li><p><strong>RW 读写节点当选 Leader 后获取租约 Lease</strong>，规则同 SN 模式；</p>
+</li>
+<li><p>写入流程：<strong>RW 通过 Paxos 向日志服务多副本写日志</strong>，<strong>多数派应答即提交成功</strong>；</p>
+</li>
+<li><p>读取流程：<strong>RO 只读节点就近拉取已提交日志，本地回放构建数据视图</strong>。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>故障与高可用能力</strong></p>
+<ul>
+<li><p><strong>日志服务半数以内节点故障：数据持久化高可用不受影响</strong>；</p>
+</li>
+<li><p><strong>计算节点不依赖节点多数派，可依托共享存储 + 日志服务快速拉起、恢复；</strong></p>
+</li>
+<li><p>额外能力：天然支持<strong>读写分离</strong>，RO 节点分担查询压力。</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="均衡层"><a href="#均衡层" class="headerlink" title="均衡层"></a>均衡层</h2><p>均衡层：靠<strong>LS 分裂 + 合并 + 迁移</strong>，自动适配扩容、缩容、日常负载均衡。</p>
+<ol>
+<li><p><strong>核心作用</strong></p>
+<p><strong>基于负载均衡原则，合理分配 日志流 LS、Tablet</strong>；</p>
+<p>解决新建分区、扩缩容、长期运行数据分布不均问题，保证集群各节点负载均衡。</p>
+</li>
+<li><p><strong>基础均衡规则</strong> </p>
+<p>新建表 &#x2F; 分区时，自动按均衡策略分配日志流与 Tablet。</p>
+</li>
+<li><p><strong>扩容场景</strong></p>
+<ol start="2">
+<li><p>租户新增服务器资源；</p>
+</li>
+<li><p>均衡层对原有日志流进行<strong>分裂</strong>；</p>
+</li>
+<li><p>拆分部分 Tablet 至新日志流；</p>
+</li>
+<li><p>将新日志流迁移至新增节点，充分利用新资源。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>缩容场景</strong></p>
+<ol start="7">
+<li><p>下线指定服务器；</p>
+</li>
+<li><p>迁移待缩容节点上的日志流；</p>
+</li>
+<li><p>与其他节点日志流进行<strong>合并</strong>；</p>
+</li>
+<li><p>释放机器资源，完成缩容。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>日常自动均衡</strong>（无增减机器）</p>
+<ul>
+<li><p>长期删表、写入不均，会导致各节点 Tablet 数量失衡；</p>
+</li>
+<li><p>均衡层定期生成均衡计划：</p>
+<ol>
+<li><p>负载高节点：分裂临时日志流，带出部分 Tablet；</p>
+</li>
+<li><p>迁移临时日志流至负载低节点；</p>
+</li>
+<li><p>目标节点完成日志流合并，实现数据均衡打散。</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="事务层"><a href="#事务层" class="headerlink" title="事务层"></a>事务层</h2><h3 id="核心目标"><a href="#核心目标" class="headerlink" title="核心目标"></a>核心目标</h3><p>保障：<strong>跨单 &#x2F; 多个日志流事务的原子性</strong> + <strong>并发事务多版本隔离性</strong>。</p>
+<ul>
+<li><p>事务原子：单 LS 靠 WAL，多 LS 靠优化 2PC，宕机可自动恢复事务状态。</p>
+</li>
+<li><p>事务隔离：依托 GTS 全局时间戳 + MVCC，实现多隔离级别与分布式快照读。</p>
+</li>
+</ul>
+<h3 id="1、原子性保障"><a href="#1、原子性保障" class="headerlink" title="1、原子性保障"></a>1、原子性保障</h3><ol>
+<li><p><strong>单日志流事务</strong> 依赖 <strong>WAL 预写日志</strong></p>
+<p> 同一 Log Stream 内多张表、多个 Tablet 修改，通过Write-Ahead Log 保证事务原子性提交。</p>
+</li>
+<li><p><strong>多日志流分布式事务</strong> 采用 <strong>优化版 2PC 两阶段提交</strong>：</p>
+<ul>
+<li><p>每个日志流会产生并持久化各自的 write-ahead log；</p>
+</li>
+<li><p>事务会选定某一条日志流作为 2PC的 <strong>协调者</strong>；</p>
+</li>
+<li><p><strong>阶段一：协调者确认所有参与 LS 的 WAL 全部持久化</strong>；</p>
+</li>
+<li><p><strong>阶段二：全部就绪后，统一通知各 LS 写入 Commit 日志，事务正式生效</strong>；</p>
+</li>
+<li><p>当 从副本回放、实例重启时，依靠 Commit 日志判定事务最终状态。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>宕机故障重启恢复</strong></p>
+<ul>
+<li><p>宕机前未完成事务：<strong>已写 WAL、无 Commit 日志</strong>；</p>
+</li>
+<li><p>依靠 WAL 中记录的<strong>全量参与 LS 日志流列表</strong>，<strong>复原协调者状态</strong>；</p>
+</li>
+<li><p><strong>自动再次推进 2PC</strong>，最终落实事务 <strong>提交 &#x2F; 回滚</strong>。</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="2、隔离性保障"><a href="#2、隔离性保障" class="headerlink" title="2、隔离性保障"></a>2、隔离性保障</h3><ol>
+<li><p>核心依赖：<strong>GTS 全局时间戳服务</strong></p>
+<p> GTS → Global Timestamp Service</p>
+<ul>
+<li><p><strong>在租户内生成 连续递增 的 全局时间戳</strong>；</p>
+</li>
+<li><p><strong>多副本部署，基于日志流同步机制保证高可用</strong>。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>版本号机制</strong></p>
+<ul>
+<li><p><strong>提交阶段：</strong></p>
+<ul>
+<li><p><strong>事务在提交时会从 GTS 获取一个时间戳作为 提交版本号</strong></p>
+</li>
+<li><p>并持久化在日志流的WAL中</p>
+</li>
+<li><p>事务内所有修改数据都以此提交版本号标记</p>
+</li>
+</ul>
+</li>
+<li><p><strong>读取阶段：</strong></p>
+</li>
+</ul>
+</li>
+</ol>
+<p>从 GTS 获取一个时间戳作为语句或事务的读取版本号。</p>
+<pre><code>    - **RC 读已提交：单条 SQL 语句开始获取读取快照时间戳**；
+
+    - **RR 可重复读 / 串行化：整个事务起始获取统一读取时间戳**。
+</code></pre>
+<ol>
+<li><p><strong>多版本快照读取</strong></p>
+<ul>
+<li><p>读取数据时，会跳过比自己大的事务版本号，<strong>只选取小于当前读版本号的最新数据</strong>（比当前读取版本号小的所有版本号中最大的版本号的数据）；</p>
+</li>
+<li><p>基于全局时间戳，为读取操作 <strong>实现统一分布式数据快照</strong>，支撑 MVCC 隔离。</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="SQL-层"><a href="#SQL-层" class="headerlink" title="SQL 层"></a>SQL 层</h2><p>SQL 层：六阶段流水线处理 SQL，三类执行计划 + 计划缓存 + 并行执行，兼顾灵活与性能。</p>
+<ol>
+<li><p><strong>核心作用</strong></p>
+<p> <strong>接收用户 SQL 请求，经过解析、改写、优化、生成、执行，最终转化为对一个或多个 Tablet 的数据访问操作。</strong></p>
+</li>
+<li><p><strong>完整执行流程</strong>（六大组件）</p>
+<ol start="2">
+<li><p><strong>Parser 语法解析</strong></p>
+<p> 对 SQL 做词法、语法解析，拆分 Token，<strong>生成语法树 Syntax Tree</strong>。</p>
+</li>
+<li><p><strong>Resolver 语义解析</strong></p>
+<p> 根据<strong>集群元数据</strong>，将SQL请求中的Token翻译成对应的对象，绑定库、表、字段、索引等数据库对象，<strong>生成Statement Tree。</strong></p>
+</li>
+<li><p><strong>Transformer 逻辑改写</strong></p>
+<p> 在语句树基础上做<strong>等价逻辑变换</strong>，优化 SQL 结构，为优化器提供更优输入。</p>
+<p> 在原 Statement Tree 上做等价变换，变换的结果仍然是一棵 Statement Tree。</p>
+</li>
+<li><p><strong>Optimizer 优化器</strong></p>
+<p> 综合语义、数据特征、数据分布，<strong>选择最佳执行计划</strong>：</p>
+<ul>
+<li><p>选择访问路径、连接顺序、连接算法</p>
+</li>
+<li><p>生成本地 &#x2F; 远程 &#x2F; 分布式执行计划</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Code Generator 代码生成器</strong></p>
+<p> 将优化后的执行计划，<strong>转换为可执行代码</strong>，不做策略优化。</p>
+</li>
+<li><p><strong>Executor 执行器</strong></p>
+<p> <strong>调度并真正执行 SQL 计划</strong>，完成数据读写返回结果。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>性能加速机制</strong></p>
+</li>
+</ol>
+<ul>
+<li><p><strong>Plan Cache：缓存历史执行计划</strong>，避免重复解析、优化，提升高频 SQL 性能。</p>
+</li>
+<li><p><strong>Fast-parser：快速词法分析</strong>，SQL 参数化处理，提升 Plan Cache 命中率。</p>
+</li>
+</ul>
+<ol>
+<li><p><strong>三类执行计划</strong></p>
+<ol start="2">
+<li><p><strong>本地计划</strong>：仅访问当前 OBServer 本机 Tablet 数据。</p>
+</li>
+<li><p><strong>远程计划</strong>：仅访问单台的 非本地节点 数据。</p>
+</li>
+<li><p><strong>分布式计划</strong>：跨多台节点访问数据，<strong>执行计划会 拆解 成  多个子计划 并行执行</strong>。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>并行执行能力</strong></p>
+<ul>
+<li><p>支持本地、分布式计划并行拆分；</p>
+</li>
+<li><p><strong>多线程调度执行</strong>，充分发挥 CPU、IO 资源；</p>
+</li>
+<li><p>降低大查询响应耗时，提升整体吞吐。</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="接入层（ODP-OBProxy）"><a href="#接入层（ODP-OBProxy）" class="headerlink" title="接入层（ODP &#x2F; OBProxy）"></a>接入层（ODP &#x2F; OBProxy）</h2><p>接入层：OBProxy 统一接入、协议兼容、精准路由、屏蔽分布式细节，是应用访问 OB 的中间代理。</p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_16.png" alt="image.png"></p>
+<ol>
+<li><p><strong>核心定义</strong></p>
+<p><strong>ODP（OceanBase Database Proxy），OceanBase 专属接入代理，作为集群统一流量入口，负责请求路由转发</strong>。</p>
+</li>
+<li><p><strong>基础特性</strong></p>
+<ul>
+<li><p><strong>独立进程部署，与 OBServer 解耦</strong>；</p>
+</li>
+<li><p>兼容 MySQL 协议，原有 MySQL 驱动、应用无需改造即可直连OceanBase。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>核心能力</strong></p>
+<ol start="2">
+<li><p><strong>自动感知集群拓扑、租户信息、Tablet 数据分布</strong>；</p>
+</li>
+<li><p>解析 SQL 访问范围，精准路由到<strong>数据所在 OBServer 节点</strong>；</p>
+</li>
+<li><p>屏蔽底层分布式细节，对应用透明无感知。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>两种部署模式</strong></p>
+<ol start="6">
+<li><p>分离部署：独立机器 &#x2F; 与应用同机部署，解耦性强；</p>
+</li>
+<li><p>同机部署：直接部署在 OBServer 所在服务器，部署简单。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>高可用入口</strong></p>
+<p><strong>多台 ODP 可配合负载均衡，统一对外提供单一访问地址</strong>，实现代理层高可用、流量分担。</p>
+</li>
+</ol>
+<hr>
+<hr>
+<h1 id="发展历程"><a href="#发展历程" class="headerlink" title="发展历程"></a>发展历程</h1><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005682187">www.oceanbase.com</a></p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_17.png" alt="image.png"></p>
+<ul>
+<li><p><strong>诞生 （2010）</strong></p>
+<ul>
+<li><p>阳振坤博士带队启动 OceanBase 项目</p>
+</li>
+<li><p>首个落地业务：淘宝收藏夹，至今仍在使用</p>
+</li>
+<li><p>核心痛点解决：高并发场景、大表联小表、海量单表数据难题</p>
+</li>
+</ul>
+</li>
+<li><p><strong>转型关系型数据库（2012）</strong></p>
+<ul>
+<li><p>早期：业务依赖定制 API 访问</p>
+</li>
+<li><p>2012 迭代出 <strong>SQL 支持版本</strong>，正式成为通用型<strong>关系型数据库</strong></p>
+</li>
+</ul>
+</li>
+<li><p><strong>切入金融场景 （2014）</strong></p>
+<ul>
+<li><p>落地支付宝 &#x2F; 蚂蚁集团，进军金融级业务</p>
+</li>
+<li><p>2014 双十一：承载部分交易库流量</p>
+</li>
+<li><p>网商银行成立后，<strong>全核心交易库</strong>统一使用 OceanBase</p>
+</li>
+</ul>
+</li>
+<li><p><strong>架构定型-金融核心全覆盖 （2016）</strong></p>
+<p>  发布重构架构的 <strong>OB 1.0</strong>：</p>
+<ol>
+<li><p>完整支持<strong>分布式事务</strong></p>
+</li>
+<li><p>高并发写入横向扩展</p>
+</li>
+<li><p>落地<strong>多租户架构</strong>（经典架构沿用至今）同年双十一：支付宝<strong>100% 核心库</strong>全量上线 OB，覆盖交易、支付、会员、账务核心系统。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>对外商业化起步（2017）</strong></p>
+<ul>
+<li><p>打破内部使用壁垒，试点外部客户</p>
+</li>
+<li><p>标杆案例：<strong>南京银行</strong>，正式走向政企金融外部市场</p>
+</li>
+</ul>
+</li>
+<li><p><strong>商业化加速・Oracle 兼容（2018）</strong></p>
+<ul>
+<li><p>发布 <strong>OB 2.0</strong>；</p>
+</li>
+<li><p>关键能力：新增 <strong>Oracle 兼容模式</strong>；</p>
+</li>
+<li><p>价值：大幅降低传统数据库迁移改造成本，快速规模化对外交付</p>
+</li>
+</ul>
+</li>
+<li><p><strong>性能登顶・世界级标杆（2019–2020）</strong></p>
+<ul>
+<li><p>2019（V2.2）：TPC-C 权威评测，<strong>6000 万 tpmC</strong> 全球第一；</p>
+</li>
+<li><p>2020：刷新纪录，达 <strong>7 亿 tpmC</strong>；</p>
+</li>
+<li><p>核心意义：</p>
+<ol>
+<li><p>全球首个上榜 TPC-C 的<strong>分布式数据库</strong></p>
+</li>
+<li><p>首个登顶该榜单的<strong>国产数据库</strong>验证：强扩展、高稳定、高性能金融级能力。</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p><strong>HTAP 混合负载能力突破（2021）</strong></p>
+<ul>
+<li><p>发布 <strong>OB 3.0</strong>，搭载全新<strong>向量化执行引擎</strong>；</p>
+</li>
+<li><p>TPC-H 大数据评测（30000GB）刷新榜单；</p>
+</li>
+<li><p>实现：<strong>单引擎同时支撑 TP 交易 + AP 分析</strong>，完成 HTAP 基础能力落地。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>全面开源（2021）</strong></p>
+<ul>
+<li><p>2021 年 6 月 1 日，OceanBase 正式<strong>全面开源</strong>；</p>
+</li>
+<li><p>战略：开放生态、共建社区、扩大产业落地。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>一体化架构 + 品牌升级 + 云化（2022）</strong></p>
+<ul>
+<li><p>新品牌 Slogan：<strong>“海量记录 笔笔算数”</strong></p>
+</li>
+<li><p>发布 <strong>OceanBase 4.0（小鱼）</strong>，业内首个<strong>单机 &#x2F; 分布式一体化架构</strong></p>
+</li>
+<li><p>同时发布 <strong>OceanBase Cloud</strong>，正式进军公有云市场</p>
+</li>
+</ul>
+</li>
+<li><p><strong>生态完善 + 多云覆盖 + 规模化落地 （2023）</strong></p>
+<ul>
+<li><p>重点打磨 <strong>4.0 稳定版（4.2.x LTS）</strong>，增强兼容性、稳定性、可观测性，成为金融核心系统主力版本</p>
+</li>
+<li><p>完成<strong>多云适配</strong>：稳定运行于阿里云、华为云、腾讯云、AWS、Azure 等主流云平台，支持一套架构跨云部署</p>
+</li>
+<li><p>金融持续渗透：覆盖<strong>国有大行、政策性银行、头部城商行 &#x2F; 农商行</strong>核心系统；非金融（政务、交通、能源、医疗）规模化落地</p>
+</li>
+</ul>
+</li>
+<li><p><strong>AP 能力里程碑（4.3）+ 国际化起步 （2024）</strong></p>
+<ul>
+<li><p>发布 <strong>OceanBase 4.3</strong>，<strong>原生列存引擎正式落地</strong>，HTAP 能力重大升级：</p>
+<ul>
+<li><p>支持<strong>行列混合存储</strong>：行存跑交易、列存跑分析；</p>
+</li>
+<li><p>基线列存、增量行存，实现<strong>写入即分析</strong>；</p>
+</li>
+<li><p>向量化引擎全面增强，复杂分析查询性能数倍提升。</p>
+</li>
+</ul>
+</li>
+<li><p>发布 <strong>4.3.5 LTS</strong>：AP 能力成熟稳定，成为<strong>生产环境可用的 HTAP 版本</strong></p>
+</li>
+</ul>
+</li>
+<li><p><strong>商业化突破 + TP&#x2F;AP 大融合 + AI战略（2025）</strong></p>
+<ul>
+<li><p>自 2020 年商业化以来，<strong>全球客户突破 4000 家</strong>，连续五年增速超 <strong>100%</strong></p>
+</li>
+<li><p>金融 “百行计划” 里程碑：覆盖 <strong>100+ 千亿级银行</strong>、<strong>190+ 核心系统</strong>；<strong>75% 头部保险集团</strong>已采用</p>
+</li>
+<li><p><strong>发布 OceanBase 4.4.2 LTS</strong>：<strong>TP&#x2F;AP 大融合里程碑</strong>，深度整合事务与分析能力</p>
+</li>
+<li><p><strong>AI 战略（Data×AI）</strong>：</p>
+<ul>
+<li><p>内核深度集成<strong>向量数据库</strong>能力，跻身 DB-Engines 全球前十；</p>
+</li>
+<li><p>开源 <strong>SeekDB</strong>：AI 原生混合搜索数据库，统一支持向量 &#x2F; 全文 &#x2F; 标量 &#x2F; GIS 检索，兼容 30+ AI 框架；</p>
+</li>
+<li><p><strong>4.5 版本</strong>：全面优化向量索引（IVF&#x2F;IVF_PQ）、内存稀疏向量索引、混合搜索与语义索引，面向 AI 应用场景</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="多租户架构"><a href="#多租户架构" class="headerlink" title="多租户架构"></a>多租户架构</h1><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005682719">OceanBase - 多租户架构概述</a></p>
+<h1 id="事务管理"><a href="#事务管理" class="headerlink" title="事务管理"></a>事务管理</h1><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005683256">OceanBase - 事务简介</a></p>
+<hr>
+<h1 id="存储架构"><a href="#存储架构" class="headerlink" title="存储架构"></a>存储架构</h1><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005682693">OceanBase - 存储架构概述</a></p>
+<p><img src="/2026/05/08/OB%E7%9F%A5%E8%AF%86/image_18.png" alt="image.png"></p>
+<h1 id="OBServer节点架构"><a href="#OBServer节点架构" class="headerlink" title="OBServer节点架构"></a>OBServer节点架构</h1><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005682710">OceanBase - OBServer 节点安装目录结构</a></p>
+<hr>
+<h1 id="存储管理"><a href="#存储管理" class="headerlink" title="存储管理"></a>存储管理</h1><h2 id="转储管理"><a href="#转储管理" class="headerlink" title="转储管理"></a>转储管理</h2><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005684842">OceanBase - 转储管理概述</a></p>
+<hr>
+<h2 id="合并管理"><a href="#合并管理" class="headerlink" title="合并管理"></a>合并管理</h2><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005684834">OceanBase - 合并管理概述</a></p>
+<hr>
+<h1 id="OB术语"><a href="#OB术语" class="headerlink" title="OB术语"></a>OB术语</h1><p><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005688389">OceanBase - OceanBase 术语</a></p>
+<hr>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Lwaiz.github.io">Leo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://lwaiz.github.io/2026/05/08/OB%E7%9F%A5%E8%AF%86/">https://lwaiz.github.io/2026/05/08/OB%E7%9F%A5%E8%AF%86/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Lwaiz.github.io" target="_blank">Leo's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></div><div class="post-share"><div class="social-share" data-image="/img/background/bg4.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文"><img class="cover" src="/img/background/bg6.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Spanner论文</div></div><div class="info-2"><div class="info-item-1">Spanner 论文解读Spanner 是 Google 在 2013 年发表于 ACM TOCS 的经典论文，系统介绍了 Google 自研的全球分布式、可扩展、多版本、同步复制 数据库 Spanner，核心突破是全球规模下实现外部一致性分布式事务。 CnBlogs - Spanner 总结 知乎 - 浅谈Spanner 设计目标Spanner 是 Google 面向全球跨数据中心场景设计的数据库，解决 Bigtable、Megastore 等系统的痛点：  支持半关系型表结构 + SQL 类查询语言  全球数据分片、自动复制、故障自动切换  首个在全球规模实现外部一致性的分布式系统  支持多版本、无锁快照读、原子 schema 变更   设计目标：可扩展性 + 高可用 + 强一致 + 全球分布。 整体架构Spanner 以 Universe 为部署单元，内部按 Zone 划分（类似数据中心部署单元）。 核心组件 Zonemaster：给 SpanServer 分配数据  SpanServer：核心服务节点，负责数据读写  Location Proxy：客户端路由，找到对应 S...</div></div></div></a><a class="pagination-related" href="/2026/05/08/GFS/" title="GFS"><img class="cover" src="/img/background/bg3.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">GFS</div></div><div class="info-2"><div class="info-item-1">Google File System (GFS) 是由 Google 在 2003 年提出的分布式文件系统，专为大规模数据密集型应用（如搜索引擎、日志存储）设计。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/05/08/Spanner/" title="Spanner"><img class="cover" src="/img/background/bg5.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Spanner</div></div><div class="info-2"><div class="info-item-1">SpannerSpanner 是 Google 自研的全球分布式、强一致、多版本、同步复制的 NewSQL 数据库，核心突破是在跨地域 &#x2F; 全球规模下，实现外部一致性（线性一致性）的分布式事务，兼顾关系型数据库的事务 &#x2F; SQL 能力与分布式系统的可扩展性、高可用。  Corbett J C, Dean J, Epstein M, et al. Spanner: Google’s globally distributed database[J]. ACM Transactions on Computer Systems (TOCS), 2013, 31(3): 1-22.  核心定位与设计目标 解决痛点：传统分布式数据库要么强一致但难扩展、要么高扩展但弱一致；Spanner 做到全球分布 + 强一致 + 高可用 + SQL&#x2F;ACID 事务。  核心能力：  跨数据中心 &#x2F; 大洲的同步复制、自动故障转移  全局外部一致性（External Consistency）：事务提交顺序与真实时间顺序一致，后提交的事务一定能看到先提交事务的结果。  支...</div></div></div></a><a class="pagination-related" href="/2026/05/08/GFS/" title="GFS"><img class="cover" src="/img/background/bg3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">GFS</div></div><div class="info-2"><div class="info-item-1">Google File System (GFS) 是由 Google 在 2003 年提出的分布式文件系统，专为大规模数据密集型应用（如搜索引擎、日志存储）设计。</div></div></div></a><a class="pagination-related" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文"><img class="cover" src="/img/background/bg6.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Spanner论文</div></div><div class="info-2"><div class="info-item-1">Spanner 论文解读Spanner 是 Google 在 2013 年发表于 ACM TOCS 的经典论文，系统介绍了 Google 自研的全球分布式、可扩展、多版本、同步复制 数据库 Spanner，核心突破是全球规模下实现外部一致性分布式事务。 CnBlogs - Spanner 总结 知乎 - 浅谈Spanner 设计目标Spanner 是 Google 面向全球跨数据中心场景设计的数据库，解决 Bigtable、Megastore 等系统的痛点：  支持半关系型表结构 + SQL 类查询语言  全球数据分片、自动复制、故障自动切换  首个在全球规模实现外部一致性的分布式系统  支持多版本、无锁快照读、原子 schema 变更   设计目标：可扩展性 + 高可用 + 强一致 + 全球分布。 整体架构Spanner 以 Universe 为部署单元，内部按 Zone 划分（类似数据中心部署单元）。 核心组件 Zonemaster：给 SpanServer 分配数据  SpanServer：核心服务节点，负责数据读写  Location Proxy：客户端路由，找到对应 S...</div></div></div></a><a class="pagination-related" href="/2026/05/08/BigTable/" title="Bigtable"><img class="cover" src="/img/background/bg3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Bigtable</div></div><div class="info-2"><div class="info-item-1">Bigtable是一个稀疏的、分布式的、持久化的多维有序映射表。</div></div></div></a><a class="pagination-related" href="/2026/05/08/Paxos/" title="Paxos"><img class="cover" src="/img/background/bg3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Paxos</div></div><div class="info-2"><div class="info-item-1">Paxos 共识算法 Lamport L. Paxos made simple[J]. ACM SIGACT News (Distributed Computing Column) 32, 4 (Whole Number 121, December 2001), 2001: 51-58.   Basic Paxos 算法：描述多节点之间如何就单个值（value）达成共识。  Multi-Paxos 思想：通过执行多个 Basic Paxos 实例，就一系列值达成共识。   针对非拜占庭场景（无恶意节点），除 Raft 外，ZAB 协议、Fast Paxos 等都是基于 Paxos 改进的共识算法。 针对拜占庭场景（存在恶意节点），通常使用 工作量证明（PoW，Proof-of-Work）、权益证明（PoS，Proof-of-Stake） 等共识算法，典型应用为区块链系统。 Basic Paxos角色定义Basic Paxos 中存在 3 个重要的角色：  提议者（Proposer）：也可以叫做协调者（coordinator），负责接受客户端请求并发起提案。提案信息通常包括提案编号...</div></div></div></a><a class="pagination-related" href="/2026/05/08/Raft/" title="Raft"><img class="cover" src="/img/background/bg4.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Raft</div></div><div class="info-2"><div class="info-item-1">Raft 共识算法 Ongaro D, Ousterhout J. In search of an understandable consensus algorithm[C]&#x2F;&#x2F;2014 USENIX annual technical conference (USENIX ATC 14). 2014: 305-319.  Raft协议将复杂的共识问题拆解成了几个独立的模块：  Leader 选举：使用随机化选举超时（工程上常见如 150–300ms 或更大范围，具体取决于网络与故障模型）。  日志复制：Leader 通过 AppendEntries RPC 广播日志。  安全性：包括选举限制和日志匹配。   非拜占庭容错（CFT）场景：节点只会 “不说话”，不会 “说假话”  节点只会发生 故障（crash）、宕机、网络延迟 &#x2F; 丢包  不会发生：  伪造消息  发送错误数据  故意撒谎、作恶、合谋攻击     基于这个假设，Raft 可以通过多数派投票实现高效的一致性，是工业界分布式系统的主流选择。 基础概念Raft节点类型一个 Raft 集群包括...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leo</div><div class="author-info-description">Leo的个人博客，记录技术和生活点滴。</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Lwaiz"><i class="fab fa-github"></i><span>关注我</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Lwaiz" target="_blank" title="GitHub"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到我的博客</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OceanBase%E7%9F%A5%E8%AF%86"><span class="toc-text">OceanBase知识</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OB%E6%A6%82%E8%BF%B0"><span class="toc-text">OB概述</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%89%B9%E6%80%A7"><span class="toc-text">核心特性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AB%98%E5%8F%AF%E7%94%A8"><span class="toc-text">高可用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AB%98%E5%85%BC%E5%AE%B9"><span class="toc-text">高兼容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%B1%95"><span class="toc-text">水平扩展</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%8E%E6%88%90%E6%9C%AC"><span class="toc-text">低成本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E6%97%B6-HTAP"><span class="toc-text">实时 HTAP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E5%85%A8%E5%8F%AF%E9%9D%A0"><span class="toc-text">安全可靠</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8"><span class="toc-text">共享存储</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%A7%E5%93%81%E6%9E%B6%E6%9E%84"><span class="toc-text">产品架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%81%E7%A7%BB%E8%AF%84%E4%BC%B0%E5%B7%A5%E5%85%B7-OMA"><span class="toc-text">迁移评估工具 OMA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%81%E7%A7%BB%E5%B7%A5%E5%85%B7-OMS"><span class="toc-text">迁移工具 OMS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7-ODC"><span class="toc-text">开发工具 ODC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%90%E7%BB%B4%E5%B7%A5%E5%85%B7-OCP"><span class="toc-text">运维工具 OCP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E6%B2%BB%E6%9C%8D%E5%8A%A1%E5%B7%A5%E5%85%B7-OAS"><span class="toc-text">自治服务工具 OAS</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E6%A8%A1%E5%BC%8F"><span class="toc-text">部署模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%97%A0%E5%85%B1%E4%BA%AB%E6%A8%A1%E5%BC%8F-Shared-Nothing%EF%BC%8CSN"><span class="toc-text">1. 无共享模式 (Shared Nothing，SN)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8%E6%A8%A1%E5%BC%8F-SS-Sahred-Storage"><span class="toc-text">2. 共享存储模式 (SS &#x2F; Sahred Storage)</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OB%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="toc-text">OB整体架构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9B%86%E7%BE%A4%E6%9E%B6%E6%9E%84"><span class="toc-text">集群架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E6%9C%AF%E8%AF%AD"><span class="toc-text">常用术语</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E6%8E%A7%E6%9C%8D%E5%8A%A1-RootService"><span class="toc-text">总控服务 RootService</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Partition-Service-%E5%88%86%E5%8C%BA%E6%9C%8D%E5%8A%A1"><span class="toc-text">Partition Service 分区服务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%88%86%E5%8C%BA%E9%AB%98%E5%8F%AF%E7%94%A8"><span class="toc-text">数据分区高可用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E"><span class="toc-text">存储引擎</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#LSM-Tree-%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="toc-text">LSM-Tree 整体架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SSTable-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="toc-text">SSTable 核心概念</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL%E5%BC%95%E6%93%8E"><span class="toc-text">SQL引擎</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ODP%E4%BB%A3%E7%90%86"><span class="toc-text">ODP代理</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OB%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84"><span class="toc-text">OB分层架构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E7%A7%9F%E6%88%B7%E5%B1%82"><span class="toc-text">多租户层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E5%B1%82"><span class="toc-text">存储层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%8D%E5%88%B6%E5%B1%82"><span class="toc-text">复制层</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%97%A0%E5%85%B1%E4%BA%AB-SN-%E6%A8%A1%E5%BC%8F-%E5%A4%8D%E5%88%B6%E5%B1%82"><span class="toc-text">无共享 SN 模式 - 复制层</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8-SS-%E6%A8%A1%E5%BC%8F-%E5%A4%8D%E5%88%B6%E5%B1%82"><span class="toc-text">共享存储 SS 模式 - 复制层</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9D%87%E8%A1%A1%E5%B1%82"><span class="toc-text">均衡层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E5%B1%82"><span class="toc-text">事务层</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%9B%AE%E6%A0%87"><span class="toc-text">核心目标</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1%E3%80%81%E5%8E%9F%E5%AD%90%E6%80%A7%E4%BF%9D%E9%9A%9C"><span class="toc-text">1、原子性保障</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2%E3%80%81%E9%9A%94%E7%A6%BB%E6%80%A7%E4%BF%9D%E9%9A%9C"><span class="toc-text">2、隔离性保障</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL-%E5%B1%82"><span class="toc-text">SQL 层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A5%E5%85%A5%E5%B1%82%EF%BC%88ODP-OBProxy%EF%BC%89"><span class="toc-text">接入层（ODP &#x2F; OBProxy）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%91%E5%B1%95%E5%8E%86%E7%A8%8B"><span class="toc-text">发展历程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%9A%E7%A7%9F%E6%88%B7%E6%9E%B6%E6%9E%84"><span class="toc-text">多租户架构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86"><span class="toc-text">事务管理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84"><span class="toc-text">存储架构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OBServer%E8%8A%82%E7%82%B9%E6%9E%B6%E6%9E%84"><span class="toc-text">OBServer节点架构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86"><span class="toc-text">存储管理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BD%AC%E5%82%A8%E7%AE%A1%E7%90%86"><span class="toc-text">转储管理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%88%E5%B9%B6%E7%AE%A1%E7%90%86"><span class="toc-text">合并管理</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OB%E6%9C%AF%E8%AF%AD"><span class="toc-text">OB术语</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/BigTable/" title="Bigtable"><img src="/img/background/bg3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Bigtable"/></a><div class="content"><a class="title" href="/2026/05/08/BigTable/" title="Bigtable">Bigtable</a><time datetime="2026-05-08T12:22:16.000Z" title="发表于 2026-05-08 20:22:16">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/GFS/" title="GFS"><img src="/img/background/bg3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="GFS"/></a><div class="content"><a class="title" href="/2026/05/08/GFS/" title="GFS">GFS</a><time datetime="2026-05-08T12:20:09.000Z" title="发表于 2026-05-08 20:20:09">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/OB%E7%9F%A5%E8%AF%86/" title="OceanBase 基础了解"><img src="/img/background/bg4.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OceanBase 基础了解"/></a><div class="content"><a class="title" href="/2026/05/08/OB%E7%9F%A5%E8%AF%86/" title="OceanBase 基础了解">OceanBase 基础了解</a><time datetime="2026-05-08T12:16:51.000Z" title="发表于 2026-05-08 20:16:51">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文"><img src="/img/background/bg6.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Spanner论文"/></a><div class="content"><a class="title" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文">Spanner论文</a><time datetime="2026-05-08T08:36:28.000Z" title="发表于 2026-05-08 16:36:28">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Spanner/" title="Spanner"><img src="/img/background/bg5.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Spanner"/></a><div class="content"><a class="title" href="/2026/05/08/Spanner/" title="Spanner">Spanner</a><time datetime="2026-05-08T08:35:28.000Z" title="发表于 2026-05-08 16:35:28">2026-05-08</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Leo</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><script src="/js/tw_cn.js?v=5.5.4"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script><meting-js server="netease" type="playlist" id="964806107" fixed="true" autoplay="false" loop="all" theme="#49b1f5" lrcFolded="true"> </meting-js><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || item.innerHTML || ""
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    if (e.request.status === 404) {
+      false
+        ? pjax.loadUrl('/404.html')
+        : window.location.href = e.request.responseURL
+    }
+  })
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

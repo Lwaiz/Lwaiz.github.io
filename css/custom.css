@@ -17,6 +17,30 @@
   font-size: 1rem !important;
 }
 
+/* 👇 只作用于 profile 页面的自定义容器，绝对不会影响其他页面 */
+.profile-content,
+.profile-content p,
+.profile-content li,
+.profile-content strong,
+.profile-content a,
+.profile-content span,
+.profile-content div,
+.profile-content .wechat-qr p {
+  font-size: 1.125rem !important; /* 和文章正文完全一致 */
+  line-height: 1.8 !important;
+}
+
+/* 标题单独设置 */
+.profile-content h1 { font-size: 2rem !important;}
+.profile-content h2 { font-size: 1.75rem !important;}
+.profile-content h3 { font-size: 1.5rem !important;}
+
+/* 二维码文字同步 */
+.wechat-qr p {
+  font-size: 0.9rem !important;
+  line-height: 1.8 !important;
+}
+
 /* 侧边栏 目录字体 */
 #sidebar .toc-item a {
   font-size: 1.125rem !important;
@@ -36,8 +60,6 @@
 .toc-item.toc-level-3 {
   padding-left: 1rem;
 }
-
-
 
 /* 个人中心头像美化 */
 .profile-avatar {
@@ -95,4 +117,39 @@
 }
 .wechat-qr img:hover {
   transform: scale(1.05); /* 鼠标悬停时放大5% */
+}
+
+
+/* ===== Butterfly 原生说说 ========== */
+
+.shuoshuo_content {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 12px 0 !important;
+}
+.shuoshuo_content p {
+  margin: 0 !important;
+  width: calc(33.333% - 6px) !important;
+}
+/* 图片样式 */
+.shuoshuo_content img {
+  width: 100% !important;
+  aspect-ratio: 1/1 !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+  cursor: zoom-in !important;
+  transition: 0.2s !important;
+}
+.shuoshuo_content img:hover {
+  opacity: 0.9 !important;
+}
+
+/* 默认隐藏歌词面板 */
+#aplayer .aplayer-lrc {
+  display: none !important;
+}
+/* 展开时正常显示 */
+#aplayer.aplayer-lrc-show .aplayer-lrc {
+  display: block !important;
 }
