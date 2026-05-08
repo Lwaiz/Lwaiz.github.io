@@ -1,0 +1,38 @@
+/* 文章正文字体（rem 单位） */
+.post-content,
+.post-content p,
+.post-content li,
+.post-content blockquote {
+  font-size: 1.125rem !important; /* 18px → 最舒服阅读大小 */
+  line-height: 1.8 !important;
+}
+
+/* 文章标题大小 */
+.post-content h1 { font-size: 2rem !important; }
+.post-content h2 { font-size: 1.75rem !important; }
+.post-content h3 { font-size: 1.5rem !important; }
+
+/* 代码块字体 */
+.post-content pre {
+  font-size: 1rem !important;
+}
+
+/* 侧边栏 目录字体 */
+#sidebar .toc-item a {
+  font-size: 1.125rem !important;
+  line-height: 1.7 !important;
+}
+
+/* 悬浮目录（文章右侧弹出目录） */
+.toc-widget .toc-item a {
+  font-size: 1.125rem !important;
+  line-height: 1.7 !important;
+}
+
+/* 目录一级、二级缩进微调（可选） */
+.toc-item.toc-level-2 {
+  padding-left: 0.5rem;
+}
+.toc-item.toc-level-3 {
+  padding-left: 1rem;
+}

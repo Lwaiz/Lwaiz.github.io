@@ -1,0 +1,1196 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Spanner论文 | Leo's Blog</title><meta name="author" content="Leo"><meta name="copyright" content="Leo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Spanner 论文解读Spanner 是 Google 在 2013 年发表于 ACM TOCS 的经典论文，系统介绍了 Google 自研的全球分布式、可扩展、多版本、同步复制 数据库 Spanner，核心突破是全球规模下实现外部一致性分布式事务。 CnBlogs - Spanner 总结 知乎 - 浅谈Spanner 设计目标Spanner 是 Google 面向全球跨数据中心场景设计的数据">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spanner论文">
+<meta property="og:url" content="https://lwaiz.github.io/2026/05/08/Spanner%E8%AE%BA%E6%96%87/index.html">
+<meta property="og:site_name" content="Leo&#39;s Blog">
+<meta property="og:description" content="Spanner 论文解读Spanner 是 Google 在 2013 年发表于 ACM TOCS 的经典论文，系统介绍了 Google 自研的全球分布式、可扩展、多版本、同步复制 数据库 Spanner，核心突破是全球规模下实现外部一致性分布式事务。 CnBlogs - Spanner 总结 知乎 - 浅谈Spanner 设计目标Spanner 是 Google 面向全球跨数据中心场景设计的数据">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lwaiz.github.io/img/background/bg6.png">
+<meta property="article:published_time" content="2026-05-08T08:36:28.000Z">
+<meta property="article:modified_time" content="2026-05-08T08:40:08.616Z">
+<meta property="article:author" content="Leo">
+<meta property="article:tag" content="Spanner">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://lwaiz.github.io/img/background/bg6.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Spanner论文",
+  "url": "https://lwaiz.github.io/2026/05/08/Spanner%E8%AE%BA%E6%96%87/",
+  "image": "https://lwaiz.github.io/img/background/bg6.png",
+  "datePublished": "2026-05-08T08:36:28.000Z",
+  "dateModified": "2026-05-08T08:40:08.616Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leo",
+      "url": "https://Lwaiz.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://lwaiz.github.io/2026/05/08/Spanner%E8%AE%BA%E6%96%87/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":true,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Spanner论文',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/style.css" media="all"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css"><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/profile/"><i class="fa-fw fas fa-user"></i><span> 个人中心</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/background/bg6.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/avatar.png" alt="Logo"><span class="site-name">Leo's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Spanner论文</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/profile/"><i class="fa-fw fas fa-user"></i><span> 个人中心</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Spanner论文</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-08T08:36:28.000Z" title="发表于 2026-05-08 16:36:28">2026-05-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-08T08:40:08.616Z" title="更新于 2026-05-08 16:40:08">2026-05-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/">论文解读</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="Spanner-论文解读"><a href="#Spanner-论文解读" class="headerlink" title="Spanner 论文解读"></a>Spanner 论文解读</h1><p>Spanner 是 Google 在 2013 年发表于 <strong>ACM TOCS</strong> 的经典论文，系统介绍了 Google 自研的<strong>全球分布式、可扩展、多版本、同步复制</strong> 数据库 Spanner，核心突破是<strong>全球规模下实现外部一致性分布式事务</strong>。</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/brianleelxt/p/13449540.html#autoid-3-2-2">CnBlogs - Spanner 总结</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/338578860">知乎 - 浅谈Spanner</a></p>
+<h1 id="设计目标"><a href="#设计目标" class="headerlink" title="设计目标"></a>设计目标</h1><p>Spanner 是 Google 面向<strong>全球跨数据中心</strong>场景设计的数据库，解决 Bigtable、Megastore 等系统的痛点：</p>
+<ul>
+<li><p>支持<strong>半关系型表结构 + SQL 类查询语言</strong></p>
+</li>
+<li><p>全球数据分片、自动复制、故障自动切换</p>
+</li>
+<li><p><strong>首个在全球规模实现外部一致性</strong>的分布式系统</p>
+</li>
+<li><p>支持多版本、无锁快照读、原子 schema 变更</p>
+</li>
+</ul>
+<p>设计目标：<strong>可扩展性 + 高可用 + 强一致 + 全球分布</strong>。</p>
+<h1 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h1><p>Spanner 以 <strong>Universe</strong> 为部署单元，内部按 <strong>Zone</strong> 划分（类似数据中心部署单元）。</p>
+<h3 id="核心组件"><a href="#核心组件" class="headerlink" title="核心组件"></a>核心组件</h3><ol>
+<li><p><strong>Zonemaster</strong>：给 SpanServer 分配数据</p>
+</li>
+<li><p><strong>SpanServer</strong>：核心服务节点，负责数据读写</p>
+</li>
+<li><p><strong>Location Proxy</strong>：客户端路由，找到对应 SpanServer</p>
+</li>
+<li><p><strong>Universe Master</strong>：控制台，监控全局状态</p>
+</li>
+<li><p><strong>Placement Driver</strong>：自动在 Zone 间迁移数据、负载均衡</p>
+</li>
+</ol>
+<h3 id="SpanServer-软件栈"><a href="#SpanServer-软件栈" class="headerlink" title="SpanServer 软件栈"></a>SpanServer 软件栈</h3><ul>
+<li><p><strong>Tablet</strong>：数据存储单元，类似 Bigtable Tablet，但带<strong>时间戳多版本</strong></p>
+</li>
+<li><p><strong>Paxos 组</strong>：每个 Tablet 对应一个 Paxos 状态机，实现同步复制与一致性</p>
+</li>
+<li><p><strong>Lock Table</strong>：leader 节点上做两阶段锁，并发控制</p>
+</li>
+<li><p><strong>Transaction Manager</strong>：处理跨 Paxos 组的分布式事务</p>
+</li>
+</ul>
+<hr>
+<h3 id="核心抽象：Directory（目录）"><a href="#核心抽象：Directory（目录）" class="headerlink" title="核心抽象：Directory（目录）"></a>核心抽象：Directory（目录）</h3><ul>
+<li><p>Directory 是<strong>数据放置、复制、迁移的最小单元</strong>（一组连续前缀的 key）</p>
+</li>
+<li><p>应用可通过主键设计控制数据本地性</p>
+</li>
+<li><p>超大 Directory 会自动切分为 Fragment，支持在线迁移</p>
+</li>
+<li><p>支持<strong>精细控制复制策略</strong>：副本数、地域分布、读写延迟</p>
+</li>
+</ul>
+<h1 id="核心技术：TrueTime-API"><a href="#核心技术：TrueTime-API" class="headerlink" title="核心技术：TrueTime API"></a>核心技术：TrueTime API</h1><p>TrueTime 是 Spanner 实现<strong>强一致</strong>的<strong>基石</strong>，直接暴露<strong>时钟不确定性</strong>。</p>
+<h3 id="接口定义"><a href="#接口定义" class="headerlink" title="接口定义"></a>接口定义</h3><ul>
+<li><p><code>TT.now()</code>：返回时间区间 <code>[earliest, latest]</code>，保证绝对时间落在其中</p>
+</li>
+<li><p><code>TT.after(t)</code>：判断 t 绝对已过</p>
+</li>
+<li><p><code>TT.before(t)</code>：判断 t 绝对未到</p>
+</li>
+</ul>
+<h3 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h3><ul>
+<li><p>底层依赖 <strong>GPS + 原子钟</strong> 双重时间源，避免单点失效</p>
+</li>
+<li><p>每个数据中心部署时间 master，节点运行 timeslave daemon</p>
+</li>
+<li><p>时钟误差 <strong>ε 通常 &lt;10ms</strong>，生产环境平均约 4ms</p>
+</li>
+<li><p>用 Marzullo 算法剔除错误时钟源，保证安全边界</p>
+</li>
+</ul>
+<hr>
+<hr>
+<p>摘要</p>
+<pre><code>Spanner 是谷歌推出的具备**可扩展性、多版本特性、全球分布式部署与同步复制能力**的数据库。它是**首个在全球范围分发数据并支持外部一致性分布式事务**的系统。
+
+本文阐述了 Spanner 的系统架构、功能特性、各项设计决策背后的依据，以及一种**显式暴露时钟不确定性**的新型时间应用程序接口（API）。该 API 及其实现是保障外部一致性的关键，同时支撑着 Spanner 全域范围内多项核心功能：**非阻塞历史数据读取、无锁快照事务与原子化模式变更**。
+</code></pre>
+<h1 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1. Introduction"></a>1. Introduction</h1><p>Spanner 是由谷歌设计、构建并部署的一款可扩展、全球分布式数据库。从最高抽象层次来看，它是<strong>一个将数据分片存储在遍布全球数据中心内的多组 Paxos 状态机上的数据库</strong>。系统采用复制机制实现<strong>全球高可用</strong>与<strong>地理就近访问</strong>；客户端可在副本之间<strong>自动故障切换</strong>。随着数据量或服务器数量变化，Spanner 会自动对数据进行重新分片，并在机器之间（甚至跨数据中心）<strong>自动迁移数据</strong>，以实现<strong>负载均衡</strong>与<strong>故障应对</strong>。Spanner 的设计目标是扩展至跨数百个数据中心的数百万台机器，支撑数万亿行数据库记录。</p>
+<p>Spanner 从一个类似 Bigtable 的带版本键值存储，演进为<strong>时序多版本数据库</strong>。数据以<strong>带模式的半关系型表</strong>存储；数据自带版本，每个版本会被自动打上<strong>提交时间戳</strong>；旧版本数据遵循可配置的<strong>垃圾回收策略</strong>；应用可以读取指定历史时间戳的数据。Spanner <strong>支持通用事务</strong>，并提供基于 SQL 的查询语言。</p>
+<p>作为一款全球分布式数据库，Spanner 具备多项突出特性：</p>
+<ol>
+<li><p><strong>应用可以细粒度、动态地控制数据地复制配置</strong></p>
+<p> 应用可通过约束</p>
+<ul>
+<li><p>指定哪些数据中心存储哪些数据、</p>
+</li>
+<li><p>数据距离用户多远（以控制读延迟）、</p>
+</li>
+<li><p>副本之间距离多远（以控制写延迟），</p>
+</li>
+<li><p>维护多少副本（以控制持久性、可用性与读性能）</p>
+</li>
+</ul>
+<p> 系统还能在数据中心之间动态、透明地移动数据，以平衡跨数据中心的资源使用。</p>
+</li>
+<li><p><strong>提供外部一致地读写，以及在指定时间戳下对整个数据库地全局一致读</strong></p>
+</li>
+</ol>
+<hr>
+<p>这些特性得以实现，核心在于 Spanner 会<strong>为事务分配具备全局意义的提交时间戳</strong>，即便事务是分布式的。时间戳反映了串行化顺序。此外，该串行化顺序满足<strong>外部一致性</strong>（等价于线性一致性）：</p>
+<p>如果事务 T1 先于事务 T2 开始前提交，那么 T1 的提交时间戳一定小于 T2 的提交时间戳。</p>
+<p>Spanner 是首个在全球规模下提供此类保证的系统。</p>
+<hr>
+<p>支撑这些特性的关键，是全新的 <strong>TrueTime API</strong> 及其实现。</p>
+<p>该 API <strong>直接显式暴露时钟不确定性</strong>，而 Spanner 时间戳的保证依赖于实现所提供的误差边界。</p>
+<p>如果不确定性较大，Spanner 会<strong>通过等待来抵消这段不确定性</strong>。</p>
+<p>谷歌集群管理软件提供了 TrueTime API 的实现，该实现通过采用 GPS 与原子钟两种现代时间参考源，将不确定性控制在很小范围（通常小于 10ms）。</p>
+<p><strong>保守上报不确定性是保证正确性的必要条件；</strong></p>
+<p><strong>将不确定性边界控制在较小范围，则是保证性能的关键。</strong></p>
+<h1 id="2-Implementation-实现"><a href="#2-Implementation-实现" class="headerlink" title="2. Implementation  实现"></a>2. Implementation  实现</h1><h3 id="基本部署单元"><a href="#基本部署单元" class="headerlink" title="基本部署单元"></a>基本部署单元</h3><ul>
+<li><p><strong>Universe（全域）</strong></p>
+<ul>
+<li><p><strong>Spanner 的完整部署实例</strong>，全球只运行少数几个（测试、开发、生产）。</p>
+</li>
+<li><p>管理跨全球数百数据中心、数百万台机器的集群。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Zone（区域）</strong></p>
+<ul>
+<li><p><strong>系统管理部署、物理隔离、数据复制的基本单位</strong>。</p>
+</li>
+<li><p>一个数据中心可包含多个 Zone，实现不同业务隔离。</p>
+</li>
+<li><p>可在线增删，适配数据中心上下线。</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>一个 Spanner 全域所包含的服务器</p>
+<p><img src="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/image.png" alt="image.png"></p>
+<p>一个区域包含一台<strong>区域主节点（Zonemaster）和一百到数千台SpanServer</strong>。</p>
+<h3 id="核心组件职责"><a href="#核心组件职责" class="headerlink" title="核心组件职责"></a>核心组件职责</h3><ol>
+<li><p><strong>Zonemaster</strong></p>
+<p> 每个 Zone 一个，<strong>负责将数据分配给 SpanServer</strong>。</p>
+</li>
+<li><p><strong>SpanServer</strong></p>
+<p> <strong>实际承载数据、提供读写服务的节点</strong>，一个 Zone 可包含数百至数千台。</p>
+</li>
+<li><p><strong>Location Proxy 位置代理</strong></p>
+<p> <strong>给客户端提供寻址定位能力，找到数据所在的 SpanServer</strong>。</p>
+</li>
+<li><p><strong>Universe Master 全域主节点（单点）</strong></p>
+<p> 全域主节点，<strong>全局控制台，展示所有区域的状态、用于交互式调试</strong>，单点部署。</p>
+</li>
+<li><p><strong>Placement Driver（单点）</strong></p>
+<p> <strong>全局调度组件，以分钟级粒度自动在 Zone 之间迁移数据</strong>。</p>
+<ul>
+<li>它会定期与 SpanServer 通信，识别需要迁移的数据，以满足更新后的<strong>复制约束</strong>或实现<strong>负载均衡</strong>。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="2-1-SpanServer-Software-Stack-软件栈"><a href="#2-1-SpanServer-Software-Stack-软件栈" class="headerlink" title="2.1 SpanServer Software Stack 软件栈"></a>2.1 SpanServer Software Stack 软件栈</h2><p>每个 SpanServer 运行完整的存储 + 复制 + 事务栈。</p>
+<p><img src="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/image_1.png" alt="image_1.png"></p>
+<h3 id="2-1-1-Tablet（数据存储单元）"><a href="#2-1-1-Tablet（数据存储单元）" class="headerlink" title="2.1.1 Tablet（数据存储单元）"></a>2.1.1 Tablet（数据存储单元）</h3><ul>
+<li><p>一个 SpanServer 管理 <strong>100~1000 个 Tablet</strong>。</p>
+</li>
+<li><p>数据模型：<strong><code>(key: string, timestamp: int64) → string</code></strong>。</p>
+</li>
+<li><p><strong>多版本键值结构，是 Spanner 支持多版本并发的基础</strong>。</p>
+</li>
+<li><p>数据与日志存储在 Colossus（GFS 第二代分布式文件系统）。</p>
+</li>
+<li><p>Tablet 的 存储格式：<strong>类 B-tree 文件 + WAL 预写日志</strong>。</p>
+</li>
+</ul>
+<h3 id="2-1-2-Paxos-复制"><a href="#2-1-2-Paxos-复制" class="headerlink" title="2.1.2 Paxos 复制"></a>2.1.2 Paxos 复制</h3><ul>
+<li><p><strong>每个 SpanServer 在每个 Tablet 之上实现 一个 Paxos 状态机</strong>，实现同步复制与一致性。</p>
+</li>
+<li><p>Paxos实现支持<strong>长生命周期 Leader 和 基于时间的主节点租约</strong>，默认租约 10 秒，减少选举开销。</p>
+</li>
+<li><p>每一次 Paxos 写入记录两次（Tablet 日志 + Paxos 日志），为实现简化，未来会优化。</p>
+</li>
+<li><p>使用 <strong>流水线 Paxos</strong>（multi-decree），<strong>一次选举支持多次决议</strong>，并支持对不同决议进行并发投票，提升广域网延迟下的吞吐量。</p>
+<ul>
+<li>尽管决议可能乱序通过，但会<strong>按序应用</strong></li>
+</ul>
+</li>
+<li><p>Paxos 状态机用于实现一致性复制的映射集合。每个副本的键值映射状态存储在对应的 Tablet 中。一组副本共同构成一个<strong>Paxos 组</strong>。</p>
+</li>
+<li><p><strong>读写操作</strong></p>
+<ul>
+<li><p><strong>写入必须在主节点 Leader 发起 Paxos协议</strong></p>
+</li>
+<li><p><strong>读可从任意已同步的副本(足够新的副本)直接读取底层Tablet数据</strong></p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-1-3-Lock-Table（并发控制）"><a href="#2-1-3-Lock-Table（并发控制）" class="headerlink" title="2.1.3 Lock Table（并发控制）"></a>2.1.3 Lock Table（并发控制）</h3><p>在每个作为主节点的副本上，SpanServer 会实现一个<strong>锁表（Lock Table）以实现并发控制。</strong></p>
+<ul>
+<li><p><strong>锁表只在 Paxos Leader 上存在</strong> 。</p>
+</li>
+<li><p><strong>实现严格两阶段锁（SS2PL），按 key range 管理锁。</strong></p>
+<ul>
+<li><p><strong>将键范围映射到锁状态</strong></p>
+</li>
+<li><p>长生命周期 Paxos 主节点对高效管理锁表至关重要。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>长事务友好</strong>（如报表生成），避免乐观锁在冲突多的场景下性能差。</p>
+</li>
+<li><p>需要同步的操作（如事务读）会在锁表中获取锁，其他操作则绕过锁表</p>
+</li>
+<li><p><strong>锁状态基本为易失性，不通过 Paxos 复制</strong>，提升性能。</p>
+</li>
+</ul>
+<h3 id="2-1-4-Transaction-Manager（事务管理器）"><a href="#2-1-4-Transaction-Manager（事务管理器）" class="headerlink" title="2.1.4 Transaction Manager（事务管理器）"></a>2.1.4 Transaction Manager（事务管理器）</h3><ul>
+<li><p><strong>同样只运行在 Leader 上</strong>。</p>
+</li>
+<li><p><strong>事务管理器用于实现参与者主节点（Participant Leader）</strong>；组内其他副本称为<strong>参与者从节点（Participant Slave）</strong>。</p>
+</li>
+<li><p><strong>单 Paxos 组事务：可绕过事务管理器</strong>，<strong>Paxos + Lock Table</strong> 即可保证事务。</p>
+</li>
+<li><p><strong>多 Paxos 组事务：使用 2PC（两阶段提交） 协调。</strong></p>
+<ul>
+<li><p>选出一个参与者组作为 <strong>Coordinator（协调者）</strong>，统一决定提交或中止。</p>
+</li>
+<li><p>该组的参与者主节点称为<strong>协调者主节点</strong>，从节点称为<strong>协调者从节点</strong>。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>事务管理器状态通过 Paxos 复制</strong>，保证故障恢复。</p>
+</li>
+</ul>
+<hr>
+<hr>
+<h2 id="2-2-Directories-and-Placement-目录与放置"><a href="#2-2-Directories-and-Placement-目录与放置" class="headerlink" title="2.2 Directories and Placement 目录与放置"></a>2.2 Directories and Placement 目录与放置</h2><h3 id="2-2-1-Directory（目录）是什么"><a href="#2-2-1-Directory（目录）是什么" class="headerlink" title="2.2.1 Directory（目录）是什么"></a>2.2.1 Directory（目录）是什么</h3><p>在键值映射之上，Spanner 实现了一种称为<strong>目录（Directory）的分桶抽象：目录是一组共享相同前缀的连续键。</strong></p>
+<ul>
+<li><p>定义：<strong>具有相同键前缀的一组连续 key</strong>，是 Spanner 最关键的调度单元。</p>
+</li>
+<li><p>作用：让应用能通过主键设计<strong>控制数据的本地性</strong>。</p>
+</li>
+</ul>
+<h3 id="2-2-2-Directory-的核心地位"><a href="#2-2-2-Directory-的核心地位" class="headerlink" title="2.2.2 Directory 的核心地位"></a>2.2.2 Directory 的核心地位</h3><ol>
+<li><p><strong>数据放置最小单元</strong></p>
+<p> <strong>一个目录内所有数据使用相同复制配置</strong>（副本数、地域、延迟策略）。</p>
+</li>
+<li><p><strong>数据迁移最小单元</strong></p>
+<p> 系统在负载均衡、副本调整、故障转移时，<strong>以目录为单位移动数据。</strong></p>
+<p> <img src="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/image_2.png" alt="image_2.png"></p>
+</li>
+<li><p><strong>支持在线迁移</strong></p>
+<p> 迁移过程不阻塞前端读写，50MB 目录可在数秒内完成。</p>
+</li>
+<li><p><strong>目录过大自动分片</strong></p>
+<p> 超大目录会切分为 <strong>Fragment（片段）</strong>，Movedir 实际迁移片段。</p>
+</li>
+<li><p>一个 Paxos 组可以包含多个目录，这意味着 Spanner 的 Tablet 与 Bigtable 的 Tablet 不同：前者不一定是行空间的连续字典序分区，而是一个可以封装多个行空间分区的容器。这一设计使得<strong>频繁一起访问的多个目录可以被 colocated（同置）</strong>。</p>
+</li>
+</ol>
+<h3 id="2-2-3-Movedir-后台任务"><a href="#2-2-3-Movedir-后台任务" class="headerlink" title="2.2.3 Movedir 后台任务"></a>2.2.3 Movedir 后台任务</h3><ul>
+<li><p><strong>负责目录 &#x2F; 片段在 Paxos 组之间迁移的后台任务</strong>。</p>
+</li>
+<li><p>支持副本添加、删除、替换。</p>
+<ul>
+<li>通过将一个组的所有数据迁移到具备目标配置的新组，来为Paxos组添加或移除副本，因为Spanner暂不支持 Paxos内配置变更。</li>
+</ul>
+</li>
+<li><p><strong>迁移非事务性执行，避免阻塞正在进行的读写。</strong></p>
+<ul>
+<li><p>Movedir 先注册迁移开始，然后在后台迁移数据</p>
+</li>
+<li><p>当仅剩少量数据未迁移时，用一个<strong>小事务原子迁移</strong>剩余数据并<strong>更新</strong>两个Paxos组的<strong>元数据</strong></p>
+</li>
+</ul>
+</li>
+<li><p>当目录过大时，Spanner 会将其拆分为多个<strong>片段（Fragment）</strong>。片段可由不同 Paxos 组（即不同服务器）提供服务。<strong>Movedir 实际迁移的是片段</strong>，而非完整目录。</p>
+</li>
+</ul>
+<h3 id="2-2-4-复制放置策略"><a href="#2-2-4-复制放置策略" class="headerlink" title="2.2.4 复制放置策略"></a>2.2.4 复制放置策略</h3><p><strong>目录是应用可指定 地理复制属性(放置策略) 的最小单位。</strong></p>
+<p>将复制配置的管理职责分离</p>
+<ul>
+<li><p>管理员定义：副本数量、类型、地域布局，并创建一组命名选项。</p>
+</li>
+<li><p>应用指定：给数据库或目录绑定放置策略，控制数据如何复制</p>
+</li>
+<li><p><strong>可实现用户级精细化调度</strong>：例如 A 用户数据存在欧洲，B 用户数据存在北美。</p>
+</li>
+</ul>
+<h2 id="2-3-数据模型（半关系型设计）"><a href="#2-3-数据模型（半关系型设计）" class="headerlink" title="2.3 数据模型（半关系型设计）"></a>2.3 数据模型（半关系型设计）</h2><h3 id="2-3-1-设计动机"><a href="#2-3-1-设计动机" class="headerlink" title="2.3.1 设计动机"></a>2.3.1 设计动机</h3><ul>
+<li><p>Bigtable 问题：无强事务、缺少跨行事务、Schema 不灵活、<strong>跨机房最终一致性复制</strong>。</p>
+</li>
+<li><p>Megastore 问题：半关系模型好用，支持跨数据中心同步复制，但<strong>写吞吐量低</strong>。</p>
+</li>
+<li><p>Spanner 目标：结合<strong>关系型易用性</strong> + <strong>分布式可扩展性</strong> + <strong>强一致性</strong>。</p>
+</li>
+</ul>
+<h3 id="2-3-2-模型特点"><a href="#2-3-2-模型特点" class="headerlink" title="2.3.2 模型特点"></a>2.3.2 模型特点</h3><ul>
+<li><p><strong>带 Schema 的半关系表</strong>，支持类 SQL 查询。</p>
+</li>
+<li><p>应用数据模型构建在实现层提供的<strong>目录分桶键值映射</strong>之上。</p>
+</li>
+<li><p><strong>必须定义主键</strong>，保留键值存储的有序与分片能力。</p>
+<ul>
+<li><p>Spanner 的数据模型并非纯关系型，因为<strong>行必须有名称</strong>。</p>
+</li>
+<li><p>每张表必须拥有一个或多个有序主键列。</p>
+</li>
+<li><p>主键构成行的名称，每张表定义了从主键列到非主键列的映射。</p>
+</li>
+<li><p>只有当行的键被定义了某个值（甚至为 NULL）时，行才存在。让应用可通过键的选择控制数据本地性。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>多版本持久化</strong>：每个修改自动打上提交时间戳，旧数据可配置 GC。</p>
+</li>
+<li><p>支持<strong>通用分布式事务</strong>（跨行、跨表、跨分片）。</p>
+</li>
+</ul>
+<h3 id="2-3-3-INTERLEAVE-IN-表嵌套（关键优化）"><a href="#2-3-3-INTERLEAVE-IN-表嵌套（关键优化）" class="headerlink" title="2.3.3 INTERLEAVE IN 表嵌套（关键优化）"></a>2.3.3 INTERLEAVE IN 表嵌套（关键优化）</h3><ul>
+<li>允许将子表数据<strong>物理交错存储</strong>在父表同一目录下。</li>
+</ul>
+<hr>
+<p>按用户、按相册存储照片元数据的 Spanner 模式示例</p>
+<p><img src="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/image_3.png" alt="image_3.png"></p>
+<hr>
+<ul>
+<li><p>示例：<code>Users</code> 表为父，<code>Albums</code> 表通过 <code>INTERLEAVE IN</code> 成为子表。</p>
+<ul>
+<li><p>每个 Spanner 数据库必须由客户端划分为一个或多个表层次结构</p>
+</li>
+<li><p>客户端应用在数据库模式中通过 <strong>INTERLEAVE IN</strong> 声明声明层次结构</p>
+</li>
+<li><p>层次结构顶端的表为<strong>目录表（Directory Table）</strong></p>
+</li>
+<li><p>目录表中键为 K 的一行，连同后代表中所有以 K 字典序开头的行，共同构成一个<strong>目录</strong>。</p>
+</li>
+<li><p><code>ON DELETE CASCADE</code> 表示删除目录表中的一行会级联删除所有关联子行</p>
+</li>
+</ul>
+</li>
+<li><p>意义：相关联的数据物理在一起，描述多表之间的本地性关系，<strong>大幅降低分布式事务与关联查询的延迟</strong>。</p>
+</li>
+</ul>
+<h2 id="核心要点总结"><a href="#核心要点总结" class="headerlink" title="核心要点总结"></a>核心要点总结</h2><ol>
+<li><p>Spanner 采用 <strong>Universe-Zone</strong> 两层部署，适配全球大规模分布式环境。</p>
+</li>
+<li><p><strong>SpanServer + Tablet + Paxos</strong> 构成可靠、一致的存储底座。</p>
+</li>
+<li><p><strong>Directory</strong> 是数据调度核心，实现可控的本地性、复制、迁移。</p>
+</li>
+<li><p>锁表 + 事务管理器 + 2PC 提供 <strong>跨分片分布式事务</strong>。</p>
+</li>
+<li><p>数据模型为<strong>半关系型</strong>，支持 Schema、主键、表嵌套，兼顾易用性与性能。</p>
+</li>
+<li><p>整体设计解决了 Bigtable 无强事务、Megastore 性能低的痛点。</p>
+</li>
+</ol>
+<h1 id="3-TrueTime"><a href="#3-TrueTime" class="headerlink" title="3. TrueTime"></a>3. TrueTime</h1><p>本节描述 <strong>TrueTime API</strong> 并概述其实现方式。我们将大部分实现细节留给另一篇文章；本节的目标是证明提供这样一种 API 的强大能力。</p>
+<h2 id="3-1-TrueTime-API-接口"><a href="#3-1-TrueTime-API-接口" class="headerlink" title="3.1 TrueTime API 接口"></a>3.1 TrueTime API 接口</h2><p>表 I 列出了该 API 的方法。TrueTime 显式地将时间表示为一个 <strong>TTinterval</strong>，这是一个带有<strong>有界时间不确定性</strong>的时间区间（这与标准时间接口不同，标准接口不会向客户端暴露任何不确定性信息）。</p>
+<p><img src="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/image_4.png" alt="image_4.png"></p>
+<p>TTinterval 的两个端点类型为 <strong>TTstamp</strong>。</p>
+<hr>
+<ul>
+<li><p><strong>TT.now()</strong></p>
+<p>  **返回一个 TTinterval：[earliest, latest]，该区间保证包含调用 TT.now () 那一刻的绝对时间。**时间纪元类 Unix 时间，并做了闰秒平滑（leap-second smearing）。</p>
+</li>
+<li><p><strong>TT.after(t)</strong></p>
+<p>  如果时刻 t <strong>绝对已经过去</strong>，则返回 true。</p>
+</li>
+<li><p><strong>TT.before(t)</strong></p>
+<p>  如果时刻 t <strong>绝对还未到来</strong>，则返回 true。</p>
+</li>
+</ul>
+<p>将事件 e 的绝对时间记为 <strong>t_abs(e)</strong>。更形式化地说，TrueTime 保证：对于一次调用 <strong><code>tt = TT.now()</code></strong>，一定满足：</p>
+<pre><code>          **tt.earliest ≤ t_abs(e_now) ≤ tt.latest**
+</code></pre>
+<p>其中， e_now 是本次调用发生的事件。</p>
+<hr>
+<h2 id="3-2-TrueTime-实现原理"><a href="#3-2-TrueTime-实现原理" class="headerlink" title="3.2 TrueTime 实现原理"></a>3.2 TrueTime 实现原理</h2><p>TrueTime 底层依赖的时间参考源是 <strong>GPS</strong> 和 <strong>原子钟</strong>。使用两种时间源是因为它们的失效模式互不相关：</p>
+<ul>
+<li><p>GPS 可能出现的问题：天线 &#x2F; 接收机故障、局部无线电干扰、GPS 系统故障、欺骗攻击等。</p>
+</li>
+<li><p>原子钟的失效与 GPS 无关，彼此之间相互独立，但长期运行会因频率误差产生明显漂移。</p>
+</li>
+</ul>
+<h3 id="3-2-1-时间主节点（Time-Master）"><a href="#3-2-1-时间主节点（Time-Master）" class="headerlink" title="3.2.1 时间主节点（Time Master）"></a>3.2.1 时间主节点（Time Master）</h3><p>每个数据中心部署<strong>一组 time master 机器</strong> 和 <strong>每台机器上的 timeslave 守护进程</strong>实现 ：</p>
+<ul>
+<li><p>大部分 master 配备带专用天线的 <strong>GPS 接收机</strong>，物理上分散部署，降低干扰与失效影响。</p>
+</li>
+<li><p>其余 master（称为 <strong>Armageddon master</strong>）配备<strong>原子钟</strong>，成本与 GPS master 相近。</p>
+</li>
+</ul>
+<p>所有 master 会定期互相比对时间。每个 master 也会将自身时间源的走时速率与本地时钟交叉校验；若偏差过大则自动剔除自身。</p>
+<p>在两次同步之间，Armageddon master 对外公布的时间不确定性会缓慢增大，该值基于保守的最坏情况时钟漂移计算得出。GPS master 公布的不确定性通常接近 0。</p>
+<h3 id="3-2-2-时间从节点-daemon（Timeslave）"><a href="#3-2-2-时间从节点-daemon（Timeslave）" class="headerlink" title="3.2.2 时间从节点 daemon（Timeslave）"></a>3.2.2 时间从节点 daemon（Timeslave）</h3><p>每台机器运行一个 timeslave 守护进程：</p>
+<ul>
+<li><p><strong>轮询多个不同的 time master（就近 GPS master + 远端 GPS + 原子钟 master）</strong>，降低单一节点错误带来的风险。</p>
+</li>
+<li><p>使用 <strong>Marzullo 算法</strong> 检测并剔除 “说谎” 的时间源。</p>
+</li>
+<li><p>将本机时钟同步到可信时间源。</p>
+</li>
+<li><p>时钟频率偏移超出最坏情况 bound 的机器会被自动剔除，保证正确性。</p>
+</li>
+<li><p>正确性依赖于对最坏情况边界的严格执行。</p>
+</li>
+</ul>
+<h2 id="3-3-时间不确定性-ε"><a href="#3-3-时间不确定性-ε" class="headerlink" title="3.3 时间不确定性 ε"></a>3.3 时间不确定性 ε</h2><p>ε 由保守的本地时钟最坏情况漂移决定，同时也受 time master 自身不确定性以及到 time master 的通信延迟影响。</p>
+<p><strong>定义瞬时误差边界 ε：为时间区间宽度的一半。<strong>生产环境中，ε 表现为随轮询周期变化的</strong>锯齿波</strong>：</p>
+<ul>
+<li><p>轮询间隔：30 秒</p>
+</li>
+<li><p>漂移率：200 微秒 &#x2F; 秒</p>
+</li>
+<li><p>通信延迟：约 1ms</p>
+</li>
+<li><p>结果：ε 通常在 <strong>1ms～7ms</strong> 之间，平均约 <strong>4ms</strong></p>
+</li>
+</ul>
+<p>在故障情况下可能出现 ε 冲高：</p>
+<ul>
+<li><p>部分 time master 不可用，会导致数据中心级别的 ε 上升</p>
+</li>
+<li><p>机器 &#x2F; 网络过载但正确性不受影响，因为 Spanner 会<strong>等待不确定性过去</strong>，只是性能会下降。</p>
+</li>
+</ul>
+<hr>
+<h3 id="核心要点"><a href="#核心要点" class="headerlink" title="核心要点"></a>核心要点</h3><ol>
+<li><p>TrueTime 是<strong>带不确定性边界</strong>的时间 API，返回区间而不是单点时间。</p>
+</li>
+<li><p>底层用 <strong>GPS + 原子钟</strong> 双源保障，误差 ε 通常 &lt;10ms。</p>
+</li>
+<li><p>正确性依赖<strong>保守的误差 bound</strong>，性能依赖<strong>把 ε 做得足够小</strong>。</p>
+</li>
+<li><p>它是 Spanner 实现<strong>外部一致性、无锁快照、原子 Schema 变更</strong>的根基。</p>
+</li>
+</ol>
+<h1 id="4-Concurrency-Control-并发控制"><a href="#4-Concurrency-Control-并发控制" class="headerlink" title="4. Concurrency Control 并发控制"></a>4. Concurrency Control 并发控制</h1><p>本章介绍 Spanner 如何使用 <strong>TrueTime</strong> 来保证并发控制的正确性属性，以及如何利用这些属性实现<strong>外部一致性事务、无锁快照事务和非阻塞历史读</strong>等功能。</p>
+<h2 id="4-1-时间戳管理"><a href="#4-1-时间戳管理" class="headerlink" title="4.1 时间戳管理"></a>4.1 时间戳管理</h2><p>Spanner 支持三种核心操作，都依赖<strong>时间戳</strong>实现一致性：</p>
+<ol>
+<li><p><strong>读写事务（RW Transaction）</strong>：悲观锁、需要协调、分配提交时间戳</p>
+<ul>
+<li><p><strong>支持读 + 写、支持跨分片、提供外部一致性的分布式事务。</strong></p>
+</li>
+<li><p>独立写入以读写事务实现</p>
+</li>
+</ul>
+</li>
+<li><p><strong>快照事务（Snapshot Transaction）</strong>：只读、无锁、分配读时间戳</p>
+<ul>
+<li><p><strong>预先声明为只读、基于快照隔离、无锁、提供外部一致性的分布式事务。</strong></p>
+</li>
+<li><p>非快照的独立读以快照事务实现</p>
+</li>
+<li><p>快照事务是一类具备<strong>快照隔离</strong>性能优势的事务</p>
+</li>
+<li><p>快照事务必须预先声明为<strong>只读</strong>，不能只是没有写入的读写事务</p>
+</li>
+<li><p>快照事务中的读在系统选定的时间戳上执行，<strong>不加锁</strong>，因此不会阻塞新写入</p>
+</li>
+<li><p>快照事务中的读可以在任何<strong>数据足够新</strong>的副本上执行</p>
+</li>
+</ul>
+</li>
+<li><p><strong>快照读（Snapshot Read）</strong>：历史读、无锁、指定时间戳或允许过期</p>
+<ul>
+<li><p><strong>在指定历史时间戳上执行的单次非阻塞只读操作。</strong></p>
+</li>
+<li><p>快照读是<strong>历史读</strong>，执行时不加锁</p>
+</li>
+<li><p>客户端可以为快照读指定时间戳，或提供期望的最大过期程度，由 Spanner 选择时间戳</p>
+</li>
+<li><p>快照读可以在任何数据足够新的副本上执行</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>所有操作的一致性保证，都建立在 <strong>TrueTime</strong> 与 <strong>时间戳规则</strong>之上。</p>
+<p><strong>对于快照事务与快照读，一旦选定时间戳，提交就是必然的，除非该时间戳的数据已被垃圾回收</strong>。因此客户端可以避免在重试循环中缓存结果。当服务器故障时，客户端可以通过复用时间戳与当前读位置，在另一台服务器上继续执行查询。</p>
+<hr>
+<p>Spanner支持的操作类型</p>
+<p><img src="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/image_5.png" alt="image_5.png"></p>
+<hr>
+<h3 id="4-1-1-Paxos-Leader-租约"><a href="#4-1-1-Paxos-Leader-租约" class="headerlink" title="4.1.1 Paxos Leader 租约"></a>4.1.1 Paxos Leader 租约</h3><h4 id="1-作用"><a href="#1-作用" class="headerlink" title="1. 作用"></a>1. 作用</h4><ul>
+<li><p>实现<strong>长生命周期 Leader</strong>（默认 10s 租约）</p>
+</li>
+<li><p>副本在成功写入时隐式延长租约投票，Leader 在租约即将到期时请求延长</p>
+</li>
+<li><p>避免频繁选举，保证锁表、时间戳单调、事务协调高效</p>
+</li>
+<li><p>定义 Leader 的<strong>租约区间</strong>：从确认获得多数派投票开始，到不再拥有多数派投票结束（部分投票过期）</p>
+</li>
+</ul>
+<h4 id="2-核心不变式（最重要）"><a href="#2-核心不变式（最重要）" class="headerlink" title="2. 核心不变式（最重要）"></a>2. 核心不变式（最重要）</h4><p><strong>同一个 Paxos 组，任意两个 Leader 的租约区间一定不重叠。</strong>→ 保证时间戳跨 Leader 仍然单调递增。</p>
+<h4 id="3-让位规则"><a href="#3-让位规则" class="headerlink" title="3. 让位规则"></a>3. 让位规则</h4><p>Spanner 允许 Paxos Leader 通过释放从节点的租约投票主动让位。</p>
+<p><strong>不相交不变式</strong></p>
+<p><strong>Leader 主动退位前，必须等待：</strong></p>
+<pre><code>                  **$TT.after(Smax） = True$**
+</code></pre>
+<p>Smax 为该 Leader 分配过的最大时间戳 → <strong>确保新旧 Leader 时间戳不交叉。</strong></p>
+<h3 id="4-1-2-读写事务时间戳分配"><a href="#4-1-2-读写事务时间戳分配" class="headerlink" title="4.1.2 读写事务时间戳分配"></a>4.1.2 读写事务时间戳分配</h3><h4 id="1-时间戳分配时机"><a href="#1-时间戳分配时机" class="headerlink" title="1. 时间戳分配时机"></a>1. 时间戳分配时机</h4><ul>
+<li><p><strong>事务读写使用严格两阶段锁（2PL）</strong></p>
+</li>
+<li><p><strong>可以在所有锁获取后、释放前 任意时刻</strong>分配提交时间戳</p>
+</li>
+<li><p>时间戳 &#x3D; Paxos 对本次提交写入的时间戳</p>
+</li>
+<li><p><strong>将Paxos分配给提交写入的时间戳作为该事务的提交时间戳</strong></p>
+</li>
+</ul>
+<h4 id="2-两大不变式"><a href="#2-两大不变式" class="headerlink" title="2. 两大不变式"></a>2. 两大不变式</h4><ol>
+<li><p><strong>单调性不变式</strong></p>
+<ol start="2">
+<li><p><strong>同一个 Paxos 组内，时间戳单调递增，跨 Leader 也保持Paxos写入分配的时间戳 单调递增。</strong></p>
+</li>
+<li><p>该不变式通过<strong>不相交不变式</strong>跨 Leader 保证：Leader 只能在其租约区间内分配时间戳。</p>
+</li>
+<li><p>每当分配时间戳 s 时，Smax 会被推进到 s 以保持不相交性。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>外部一致性不变式（论文灵魂）</strong></p>
+<ol start="6">
+<li><p>若 T1 提交 <strong>早于</strong> T2 开始⇒ <strong>s₁ &lt; s₂</strong>（提交时序 &#x3D; 时间戳时序）</p>
+</li>
+<li><p><strong>如果事务 T₂ 的开始发生在事务 T₁ 提交之后，则 T₂ 的提交时间戳一定大于 T₁ 的提交时间戳。</strong></p>
+</li>
+<li><p>设事务 Tᵢ 的开始与提交事件为 $eᵢ^{start}$ 与 $eᵢ^{commit}$，提交时间戳为 sᵢ。不变式可写为：</p>
+<pre><code>           $t_{abs} (e₁^{commit}) &lt; t_{abs} (e₂^{start}) ⇒ s₁ &lt; s₂$
+</code></pre>
+</li>
+</ol>
+</li>
+</ol>
+<p><img src="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/image_6.png" alt="image_6.png"></p>
+<h4 id="3-两条黄金规则（保证外部一致性）"><a href="#3-两条黄金规则（保证外部一致性）" class="headerlink" title="3. 两条黄金规则（保证外部一致性）"></a>3. 两条黄金规则（保证外部一致性）</h4><p>定义写入事务 Tᵢ 的提交请求到达协调者 Leader 的事件为 $eᵢ^{server}$</p>
+<ol>
+<li><p><strong>Start 规则</strong></p>
+<p> 写入事务 Tᵢ 的协调者 Leader 分配的提交时间戳 sᵢ，<strong>不小于</strong>在 $eᵢ^{server}$ 之后计算的 $TT.now ().latest$</p>
+<p> <strong>提交时间戳 s ≥ TT.now().latest</strong>（在提交请求到达协调者之后计算）</p>
+</li>
+<li><p><strong>Commit Wait 规则</strong></p>
+<p> <strong>协调者必须等待 TT.after(s) 为真，才对外可见</strong>。</p>
+<p> → 确保 s &lt; 真实提交时间    $sᵢ &lt;t_{abs} (eᵢ^{commit})$</p>
+</li>
+</ol>
+<h4 id="4-极简证明"><a href="#4-极简证明" class="headerlink" title="4. 极简证明"></a>4. 极简证明</h4><p>s₁ &lt;t_abs (T1 提交) &lt; t_abs (T2 开始) ≤ t_abs (T2 请求到达) ≤ s₂⇒ <strong>s₁ &lt; s₂</strong></p>
+<ol>
+<li><p>$s₁ &lt;t_{abs} (e₁^{commit}) $                （Commit Wait）</p>
+</li>
+<li><p>$t_{abs} (e₁^{commit}) &lt; t_{abs} (e₂^{start}) $  （前提）</p>
+</li>
+<li><p>$t_{abs} (e₂^{start}) ≤ t_{abs} (e₂^{server}) $   （因果关系）</p>
+</li>
+<li><p>$t_{abs} (e₂^{server}) ≤ s₂ $                 （Start 规则）</p>
+</li>
+<li><p>$s₁ &lt; s₂ $                                 （传递性）</p>
+</li>
+</ol>
+<h3 id="4-1-3-安全时间-t-safe"><a href="#4-1-3-安全时间-t-safe" class="headerlink" title="4.1.3 安全时间 t_safe"></a>4.1.3 安全时间 t_safe</h3><h4 id="1-作用-1"><a href="#1-作用-1" class="headerlink" title="1. 作用"></a>1. 作用</h4><p><strong>判断一个副本是否 “足够新”，可以执行指定时间戳 t 的读。</strong></p>
+<p>每个副本维护一个称为 <strong>安全时间 t_safe</strong> 的值，它是副本能够确定已更新到位的最大时间戳。当且仅当 t ≤ t_safe 时，副本可以满足时间戳 t 的读。</p>
+<h4 id="2-公式"><a href="#2-公式" class="headerlink" title="2. 公式"></a>2. 公式</h4><p><strong>$t_{safe} &#x3D; min(t_{safe}^{Paxos}, t_{safe}^{TM})$</strong></p>
+<ul>
+<li><p>**t_safe^Paxos：**已应用的最大 Paxos 写入时间戳</p>
+</li>
+<li><p>**t_safe^TM：**事务管理器安全时间</p>
+<ul>
+<li><p><strong>无 prepared 事务 → t_safe^TM &#x3D; ∞</strong></p>
+</li>
+<li><p><strong>有 prepared 事务 → min (所有 prepare 时间戳) − 1</strong></p>
+<ul>
+<li><p>若存在 prepared 事务，则参与者副本无法确定这些事务是否会提交。</p>
+</li>
+<li><p>提交协议保证每个参与者知道 prepared 事务时间戳的下界。</p>
+</li>
+<li><p>每个参与者 Leader 为 prepare 记录分配 prepare 时间戳 sᵢ,ᵍ^prepare。</p>
+</li>
+<li><p>协调者 Leader 保证事务提交时间戳 sᵢ ≥ 所有参与者组的 sᵢ,ᵍ^prepare。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-可读条件"><a href="#3-可读条件" class="headerlink" title="3. 可读条件"></a>3. 可读条件</h4><p><strong>t ≤ t_safe</strong> 才能读→ 避免读到未提交、半提交数据。</p>
+<h3 id="4-1-4-快照事务（只读）时间戳分配"><a href="#4-1-4-快照事务（只读）时间戳分配" class="headerlink" title="4.1.4 快照事务（只读）时间戳分配"></a>4.1.4 快照事务（只读）时间戳分配</h3><h4 id="1-执行两步"><a href="#1-执行两步" class="headerlink" title="1. 执行两步"></a>1. 执行两步</h4><ol>
+<li><p><strong>分配 s_read</strong></p>
+</li>
+<li><p><strong>在 s_read 执行无锁快照读</strong>（任意足够新副本）</p>
+</li>
+</ol>
+<h4 id="2-最简单分配方式"><a href="#2-最简单分配方式" class="headerlink" title="2. 最简单分配方式"></a>2. 最简单分配方式</h4><pre><code>                   **$s_{read} = TT.now().latest$**
+</code></pre>
+<p>→ 保证外部一致性，但可能需要等待 t_safe 推进。</p>
+<h4 id="3-Spanner-优化（减少阻塞）"><a href="#3-Spanner-优化（减少阻塞）" class="headerlink" title="3. Spanner 优化（减少阻塞）"></a>3. Spanner 优化（减少阻塞）</h4><p>分配<strong>满足外部一致性的最旧可用时间戳</strong>：</p>
+<ul>
+<li><p>单 Paxos 组：直接用 <strong>LastTS()</strong>（最后提交写入的时间戳）</p>
+</li>
+<li><p>多 Paxos 组：用 TT.now ().latest，避免跨组协商</p>
+</li>
+</ul>
+<hr>
+<h3 id="核心总结"><a href="#核心总结" class="headerlink" title="核心总结"></a>核心总结</h3><p>Spanner 通过 <strong>Leader 租约不重叠 + 时间戳单调 + Start&#x2F;Commit Wait 规则</strong>，实现<strong>全球外部一致性</strong>；并用 <strong>t_safe</strong> 保证任何副本都能安全、一致地提供历史快照读。</p>
+<hr>
+<h2 id="4-2-实现细节"><a href="#4-2-实现细节" class="headerlink" title="4.2 实现细节"></a>4.2 实现细节</h2><p><strong>读写事务、快照事务、原子Schema 变更、Leader 租约</strong>的落地实现细节，是 Spanner 强一致的工程核心。</p>
+<p>把 4.1 的理论规则变成<strong>可运行的工程实现</strong>，重点讲：</p>
+<ol>
+<li><p>读写事务完整流程（2PC + 锁 + Commit Wait）</p>
+</li>
+<li><p>快照事务如何分配时间戳</p>
+</li>
+<li><p>原子 Schema 变更如何做到非阻塞</p>
+</li>
+<li><p>三大工程优化（消除伪冲突）</p>
+</li>
+<li><p>Leader 租约如何保证不相交（核心正确性）</p>
+</li>
+</ol>
+<h3 id="4-2-1-读写事务（Read-Write-Transaction）"><a href="#4-2-1-读写事务（Read-Write-Transaction）" class="headerlink" title="4.2.1 读写事务（Read-Write Transaction）"></a>4.2.1 读写事务（Read-Write Transaction）</h3><h4 id="1-客户端行为"><a href="#1-客户端行为" class="headerlink" title="1. 客户端行为"></a>1. 客户端行为</h4><ul>
+<li><p><strong>写入先缓存在客户端，不立即发送</strong></p>
+</li>
+<li><p><strong>事务内的读看不见自己的写入</strong></p>
+<ul>
+<li>因为读会返回数据时间戳，未提交写入未分配时间戳</li>
+</ul>
+</li>
+<li><p><strong>读写事务的 读 用 wound-wait 避免死锁</strong></p>
+<ul>
+<li><p>客户端向对应组的 Leader 副本发送读请求，Leader 获取读锁后读取最新数据。</p>
+</li>
+<li><p>客户端事务保持开启期间，会发送心跳避免参与者 Leader 超时事务。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-两阶段提交（2PC）流程"><a href="#2-两阶段提交（2PC）流程" class="headerlink" title="2. 两阶段提交（2PC）流程"></a>2. 两阶段提交（2PC）流程</h4><p>当客户端完成所有读并缓存所有写入后，开始<strong>两阶段提交</strong>。</p>
+<ol>
+<li><p>客户端向所有参与者组发读请求，Leader 加读锁</p>
+</li>
+<li><p>客户端收集完读写，发起提交，指定<strong>协调者组</strong></p>
+<ol start="3">
+<li>由客户端驱动两阶段提交，可避免数据在广域链路上重复传输</li>
+</ol>
+</li>
+<li><p><strong>非协调者 Leader：</strong></p>
+<ul>
+<li><p>加写锁</p>
+</li>
+<li><p>分配 <strong>prepare 时间戳</strong>（必须单调递增，大于此前所有事务时间戳）</p>
+</li>
+<li><p>通过 Paxos 持久化 prepare 记录</p>
+</li>
+<li><p>把 prepare 时间戳 通知 给协调者</p>
+</li>
+</ul>
+</li>
+<li><p><strong>协调者 Leader：</strong></p>
+<ul>
+<li><p>加写锁，但跳过prepare阶段</p>
+</li>
+<li><p>收到所有参与者消息后，选<strong>全局提交时间戳 s</strong>，必须满足：</p>
+<ul>
+<li><p>s ≥ 所有参与者的 prepare 时间戳</p>
+</li>
+<li><p>s ≥ TT.now ().latest（提交请求到达后）</p>
+</li>
+<li><p>s &gt; 自己之前分配的所有时间戳</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>之后协调者通过 Paxos 提交记录（或等待参与者超时时中止）</p>
+</li>
+<li><p><strong>Commit Wait</strong>：协调者必须等 <strong>TT.after(s)</strong> 才暴露结果</p>
+</li>
+<li><p>等待结束后，协调者将提交时间戳发送给客户端与所有其他参与者Leader，每个参与者Leader通过Paxos记录事务结果</p>
+</li>
+<li><p>所有参与者应用提交、释放锁</p>
+</li>
+</ol>
+<h4 id="3-关键保证"><a href="#3-关键保证" class="headerlink" title="3. 关键保证"></a>3. 关键保证</h4><ul>
+<li><p><strong>只有 Paxos Leader 持锁</strong></p>
+</li>
+<li><p><strong>锁状态只在 prepare 时持久化</strong></p>
+<ul>
+<li><p>若 prepare 前锁丢失（死锁规避、超时、Leader 变更），参与者中止。</p>
+</li>
+<li><p>Spanner 保证只有持有全部锁时才会记录 prepare 或提交记录。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Leader 切换时，新 Leader在接受新事务前， 会恢复 prepared 未提交事务的锁</strong></p>
+</li>
+<li><p><strong>在允许协调者副本应用提交记录前，协调者 Leader 必须等待 TT.after(s)</strong>，以遵守 4.1.2 节的 Commit Wait 规则</p>
+</li>
+<li><p><strong>Commit Wait 等待时长 ≈ 2×ε</strong>，通常和 Paxos 通信重叠</p>
+</li>
+</ul>
+<hr>
+<h3 id="4-2-2-快照事务（Snapshot-Transaction）"><a href="#4-2-2-快照事务（Snapshot-Transaction）" class="headerlink" title="4.2.2 快照事务（Snapshot Transaction）"></a>4.2.2 快照事务（Snapshot Transaction）</h3><h4 id="1-前提：必须有-Scope（作用域）"><a href="#1-前提：必须有-Scope（作用域）" class="headerlink" title="1. 前提：必须有 Scope（作用域）"></a>1. 前提：必须有 Scope（作用域）</h4><p>分配时间戳需要在所有涉及的 Paxos 组之间进行一次协商。</p>
+<p>因此 <strong>Spanner 要求每个 快照事务 都有 作用域表达式</strong> ，用于概括整个事务将要读取的键集合。</p>
+<p>独立查询的作用域由 Spanner 自动推导。</p>
+<ul>
+<li><p>必须声明要读的键范围（Spanner 可自动推导）</p>
+</li>
+<li><p>用于确定需要联系哪些 Paxos 组</p>
+</li>
+</ul>
+<h4 id="2-单个-Paxos-组读（最常见）"><a href="#2-单个-Paxos-组读（最常见）" class="headerlink" title="2. 单个 Paxos 组读（最常见）"></a>2. 单个 Paxos 组读（最常见）</h4><ul>
+<li><p>客户端将快照事务发往该组 Leader</p>
+</li>
+<li><p>直接在该 Paxos 组 Leader 分配 s_read 时间戳 并 执行读</p>
+</li>
+<li><p>最优策略：<strong>s_read &#x3D; LastTS()</strong></p>
+<ul>
+<li><p>定义 LastTS 为 Paxos组最后一次提交写入的时间戳</p>
+</li>
+<li><p>可天然满足外部一致性：<strong>事务将看到最后一次写入的结果，并排在其之后</strong></p>
+</li>
+<li><p>无阻塞、最老、满足一致</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-多-Paxos-组读"><a href="#3-多-Paxos-组读" class="headerlink" title="3. 多 Paxos 组读"></a>3. 多 Paxos 组读</h4><ul>
+<li><p>不做跨组协商，避免延迟</p>
+</li>
+<li><p>直接用 <strong>s_read &#x3D; TT.now().latest 执行读</strong></p>
+<ul>
+<li><p>可能需要等待安全时间 t_safe 推进，但实现简单、稳定</p>
+</li>
+<li><p><strong>事务内所有读可发往足够新的副本</strong></p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="4-特点"><a href="#4-特点" class="headerlink" title="4. 特点"></a>4. 特点</h4><ul>
+<li><p><strong>全程无锁</strong></p>
+</li>
+<li><p>可在任意 ** 足够新（t ≤ t_safe）** 的副本读</p>
+</li>
+<li><p>不阻塞写入，写入不阻塞 读</p>
+</li>
+</ul>
+<hr>
+<h3 id="4-2-3-原子-Schema-变更（全球非阻塞）"><a href="#4-2-3-原子-Schema-变更（全球非阻塞）" class="headerlink" title="4.2.3 原子 Schema 变更（全球非阻塞）"></a>4.2.3 原子 Schema 变更（全球非阻塞）</h3><p><strong>TrueTime 使 Spanner 能够支持原子 Schema 变更。</strong></p>
+<h4 id="1-传统问题"><a href="#1-传统问题" class="headerlink" title="1. 传统问题"></a>1. 传统问题</h4><ul>
+<li><p>使用标准事务不可行，普通事务参与者可达数百万，无法用 2PC</p>
+</li>
+<li><p>Bigtable 在单个数据中心内支持原子变更 Schema ，但会<strong>阻塞全部读写</strong></p>
+</li>
+</ul>
+<h4 id="2-Spanner-方案（靠-TrueTime）"><a href="#2-Spanner-方案（靠-TrueTime）" class="headerlink" title="2. Spanner 方案（靠 TrueTime）"></a>2. Spanner 方案（靠 TrueTime）</h4><p>Spanner 的 Schema 变更事务是标准事务的<strong>非阻塞变体</strong>：</p>
+<ol>
+<li><p>给 Schema 变更显式分配一个<strong>未来时间戳 t</strong></p>
+</li>
+<li><p>在 prepare 阶段把 t 注册到所有组</p>
+</li>
+<li><p>隐式依赖 Schema 的读写操作，会与注册的 Schema 变更时间戳 t 同步：</p>
+<ul>
+<li><p><strong>自身时间戳 &lt; t：正常执行</strong></p>
+</li>
+<li><p><strong>自身时间戳 ≥ t：必须阻塞等待 Schema 变更生效</strong></p>
+</li>
+</ul>
+</li>
+<li><p>生效时刻 t 到达后，全系统原子切换</p>
+</li>
+</ol>
+<h4 id="3-优势"><a href="#3-优势" class="headerlink" title="3. 优势"></a>3. 优势</h4><ul>
+<li><p><strong>全球原子</strong></p>
+</li>
+<li><p><strong>基本不阻塞业务</strong></p>
+</li>
+<li><p>不需要停服务、不需要锁全库</p>
+</li>
+</ul>
+<hr>
+<h3 id="4-2-4-系统优化（重要工程改进）"><a href="#4-2-4-系统优化（重要工程改进）" class="headerlink" title="4.2.4 系统优化（重要工程改进）"></a>4.2.4 系统优化（重要工程改进）</h3><h4 id="优化-1：细粒度-t-safe-TM-（消除伪冲突）"><a href="#优化-1：细粒度-t-safe-TM-（消除伪冲突）" class="headerlink" title="优化 1：细粒度 $t_{safe}^{TM}$（消除伪冲突）"></a>优化 1：细粒度 $t_{safe}^{TM}$（消除伪冲突）</h4><ul>
+<li><p>问题：单个 prepared 事务会<strong>卡住整个组的 t_safe</strong></p>
+</li>
+<li><p>解决：<strong>把 t_safe 按键范围拆分</strong></p>
+<ul>
+<li><p>将 t_safe^TM 扩展为<strong>键范围到 prepared 事务时间戳的细粒度映射</strong>来消除</p>
+</li>
+<li><p>该信息可存在锁表中，锁表本身已维护键范围到锁元数据的映射</p>
+</li>
+</ul>
+</li>
+<li><p>读请求 只检查自己相关键范围的细粒度 safe time</p>
+</li>
+<li><p>不冲突的读可以继续跑</p>
+</li>
+</ul>
+<h4 id="优化-2：细粒度-LastTS"><a href="#优化-2：细粒度-LastTS" class="headerlink" title="优化 2：细粒度 LastTS ()"></a>优化 2：细粒度 LastTS ()</h4><ul>
+<li><p>问题：一个提交会让所有快照读事务都取更晚的时间戳，可能导致读延迟</p>
+</li>
+<li><p>解决：<strong>按键范围记录最后提交时间</strong></p>
+<ul>
+<li>在锁表中增加键范围到提交时间戳的细粒度映射 (未实现)</li>
+</ul>
+</li>
+<li><p>无冲突的读可以用更老、更不阻塞的时间戳</p>
+<ul>
+<li>当快照事务到达时，可仅取冲突键范围的 LastTS () 最大值，除非存在冲突的 prepared 事务</li>
+</ul>
+</li>
+</ul>
+<h4 id="优化-3：t-safe-Paxos-空闲推进（解决-“无写入就不能读新时间”）"><a href="#优化-3：t-safe-Paxos-空闲推进（解决-“无写入就不能读新时间”）" class="headerlink" title="优化 3：t_safe^Paxos 空闲推进（解决 “无写入就不能读新时间”）"></a>优化 3：t_safe^Paxos 空闲推进（解决 “无写入就不能读新时间”）</h4><ul>
+<li><p>问题：无 Paxos 写入时 t_safe^Paxos 无法推进，旧副本不能读新快照</p>
+<ul>
+<li>若 Paxos 组最后一次安全写入早于 t，该组无法执行 t 时刻的快照读</li>
+</ul>
+</li>
+<li><p>解决：<strong>利用 Leader 租约区间不相交</strong> 解决该问题</p>
+<ul>
+<li><p><strong>每个 Paxos Leader 维护 MinNextTS(n)表示 Paxos 日志序号 n 的下一次写入至少用什么时间戳</strong></p>
+</li>
+<li><p>副本可把 t_safe^Paxos 推进到 <strong>MinNextTS(n) − 1</strong></p>
+</li>
+<li><p>默认每 8s 推进一次；空闲组也能提供较新的快照读</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>单个 Leader 可轻松保证 MinNextTS () 承诺。由于 MinNextTS () 承诺的时间戳位于 Leader 租约内，不相交不变式保证跨 Leader 的承诺。若 Leader 希望将 MinNextTS () 推进到租约结束之后，必须先延长租约。注意 Smax 始终被推进到 MinNextTS () 中的最大值，以保持不相交性。</p>
+<p>Leader 默认每 8 秒推进一次 MinNextTS ()。因此，在无 prepared 事务时，空闲 Paxos 组的健康从节点在最坏情况下，可服务<strong>8 秒前</strong>时间戳的快照读。Leader 也可根据从节点请求即时推进 MinNextTS ()。</p>
+<hr>
+<h3 id="4-2-5-Paxos-Leader-租约管理（保证不相交，核心正确性）"><a href="#4-2-5-Paxos-Leader-租约管理（保证不相交，核心正确性）" class="headerlink" title="4.2.5 Paxos Leader 租约管理（保证不相交，核心正确性）"></a>4.2.5 Paxos Leader 租约管理（保证不相交，核心正确性）</h3><h4 id="1-目标"><a href="#1-目标" class="headerlink" title="1. 目标"></a>1. 目标</h4><p><strong>任意时刻一个 Paxos 组只有一个 Leader</strong></p>
+<p>租约区间不重叠 → 时间戳一定单调</p>
+<h4 id="2-不用额外写日志，靠-TrueTime-实现"><a href="#2-不用额外写日志，靠-TrueTime-实现" class="headerlink" title="2. 不用额外写日志，靠 TrueTime 实现"></a>2. 不用额外写日志，靠 TrueTime 实现</h4><ul>
+<li><p>副本授予投票时，记录到期时间：</p>
+<pre><code>  **t_end = TT.now().latest + lease**
+</code></pre>
+</li>
+<li><p>副本遵守<strong>单投票规则：TT.after (t_end) 为真之前，不再给新 Leader 投票</strong></p>
+</li>
+<li><p>新 Leader 必须等旧 Leader 租约完全过期</p>
+</li>
+</ul>
+<h4 id="3-租约区间计算"><a href="#3-租约区间计算" class="headerlink" title="3. 租约区间计算"></a>3. 租约区间计算</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lease_i.start <span class="operator">=</span> TT.now().latest</span><br><span class="line">lease_i.end <span class="operator">=</span> <span class="built_in">min</span>(所有投票的起始时间) <span class="operator">+</span> lease</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-不相交证明思路"><a href="#4-不相交证明思路" class="headerlink" title="4. 不相交证明思路"></a>4. 不相交证明思路</h4><ul>
+<li><p>新旧两个多数集必定共享至少一个副本 r0</p>
+</li>
+<li><p>旧 Leader 的租约结束 &lt; r0 授予新投票的时间</p>
+</li>
+<li><p>新 Leader 的租约开始 ≥ 授予投票时间</p>
+</li>
+<li><p>→    <strong>旧租约.end &lt; 新租约.start</strong></p>
+</li>
+</ul>
+<p><img src="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/image_7.png" alt="image_7.png"></p>
+<hr>
+<h3 id="核心总结-1"><a href="#核心总结-1" class="headerlink" title="核心总结"></a>核心总结</h3><p>4.2 节用<strong>2PC + 锁 + Commit Wait</strong>实现读写事务，用<strong>Scope + LastTS</strong>实现无锁快照，靠<strong>未来时间戳</strong>实现非阻塞原子 Schema 变更，并通过三项关键优化提升性能；最终用 <strong>TrueTime 保证 Leader 租约不相交</strong>，让整个系统的时间与一致性完全可信。</p>
+<hr>
+<h1 id="5-Evaluation"><a href="#5-Evaluation" class="headerlink" title="5. Evaluation"></a>5. Evaluation</h1><p>Spanner 在<strong>多副本下写入延迟低、读吞吐可水平扩展</strong>；故障能在<strong>10 秒内恢复</strong>；<strong>TrueTime 时钟稳定可靠</strong>；在 Google F1 广告核心业务上<strong>稳定支撑海量请求、完全替代 MySQL</strong>。</p>
+<ol>
+<li><p><strong>性能</strong>：副本数增加对写入延迟影响小、读吞吐量可水平扩展；2PC 在 50 个参与者内延迟可控。</p>
+</li>
+<li><p><strong>可用性</strong>：非 Leader 机房故障无影响；Leader 硬断约 10 秒完全恢复（等于租约时长）。</p>
+</li>
+<li><p><strong>TrueTime</strong>：时钟误差 ε 常态 1–7ms，稳定可靠；误差增大只影响性能，不破坏正确性。</p>
+</li>
+<li><p><strong>业务价值</strong>：成功支撑 Google 广告 F1 系统，替代分片 MySQL，解决手动扩容难、事务弱问题。</p>
+</li>
+<li><p><strong>落地效果</strong>：自动故障切换无感、强一致、多副本容灾强，绝大多数请求为单片段高效处理。</p>
+</li>
+</ol>
+<h1 id="6-Related-Work"><a href="#6-Related-Work" class="headerlink" title="6. Related Work"></a>6. Related Work</h1><ol>
+<li><p><strong>与 Megastore 对比</strong></p>
+<ul>
+<li><p>同样半关系模型、同步复制</p>
+</li>
+<li><p>Megastore 写吞吐极低、不支持长 Leader</p>
+</li>
+<li><p>Spanner 更强一致、性能更高、支持全局事务</p>
+</li>
+</ul>
+</li>
+<li><p><strong>与 DynamoDB 对比</strong></p>
+<ul>
+<li><p>DynamoDB 是键值、仅区域内复制</p>
+</li>
+<li><p>Spanner 全球分布、外部一致性、支持事务</p>
+</li>
+</ul>
+</li>
+<li><p><strong>与 Calvin &#x2F; H-Store &#x2F; Granola 对比</strong></p>
+<ul>
+<li><p>这些系统都做无锁 &#x2F; 低冲突事务</p>
+</li>
+<li><p>但<strong>都不支持外部一致性</strong></p>
+</li>
+<li><p>Spanner 是第一个全球规模做到外部一致</p>
+</li>
+</ul>
+</li>
+<li><p><strong>与传统 NewSQL（VoltDB）对比</strong></p>
+<ul>
+<li><p>VoltDB 只支持主从复制、灾有限</p>
+</li>
+<li><p>Spanner 支持灵活多副本、全球部署</p>
+</li>
+</ul>
+</li>
+<li><p><strong>与时钟同步相关工作对比</strong></p>
+<ul>
+<li><p>前人只 loosely sync 时钟</p>
+</li>
+<li><p>Spanner 首次<strong>显式暴露时钟不确定性</strong>，用 API 保证正确性</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h1 id="7-Future-Work"><a href="#7-Future-Work" class="headerlink" title="7. Future Work"></a>7. Future Work</h1><ol>
+<li><p><strong>功能完善</strong></p>
+<ul>
+<li><p>自动二级索引</p>
+</li>
+<li><p>自动负载均衡与跨机房数据迁移</p>
+</li>
+<li><p>原生支持 Paxos 配置动态变更</p>
+</li>
+</ul>
+</li>
+<li><p><strong>性能优化</strong></p>
+<ul>
+<li><p>把 ε 压到 <strong>1ms 以下</strong>（更好时钟 + 更短同步间隔）</p>
+</li>
+<li><p>提升复杂 SQL 单节点执行性能</p>
+</li>
+<li><p>并行读优化</p>
+</li>
+</ul>
+</li>
+<li><p><strong>架构演进</strong></p>
+<ul>
+<li><p>让应用与数据<strong>协同自动迁移</strong></p>
+</li>
+<li><p>跨数据中心资源统一调度</p>
+</li>
+</ul>
+</li>
+</ol>
+<h1 id="8-Conclusions"><a href="#8-Conclusions" class="headerlink" title="8. Conclusions"></a>8. Conclusions</h1><ol>
+<li><p><strong>Spanner 融合两大领域</strong></p>
+<ul>
+<li><p>分布式系统：可扩展、自动分片、容错、同步复制</p>
+</li>
+<li><p>数据库：半关系模型、事务、SQL、强一致</p>
+</li>
+</ul>
+</li>
+<li><p><strong>最大创新：TrueTime</strong></p>
+<ul>
+<li><p>把<strong>时钟不确定性变成显式 API</strong></p>
+</li>
+<li><p>用极小等待（2ε）换取<strong>全球外部一致性</strong></p>
+</li>
+<li><p>是事务、快照、原子 Schema 变更的基石</p>
+</li>
+</ul>
+</li>
+<li><p><strong>工程里程碑</strong></p>
+<ul>
+<li><p>全球首个<strong>大规模分布式 + 外部一致</strong>数据库</p>
+</li>
+<li><p>真正解决：广域分布、强一致、高可用、易用性不能兼得的难题</p>
+</li>
+</ul>
+</li>
+<li><p><strong>行业启示</strong></p>
+<ul>
+<li><p>分布式系统不应该再依赖<strong>弱时钟接口</strong></p>
+</li>
+<li><p>显式时间语义 + 硬件时钟（GPS + 原子钟）是未来方向</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<p>Spanner 对比现有系统实现了<strong>外部一致性</strong>突破；未来将持续<strong>缩小时钟误差、完善功能、提升自动化</strong>；它证明<strong>全球分布式强一致数据库</strong>可真正落地，并重新定义了分布式系统的时间与一致性设计。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Lwaiz.github.io">Leo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://lwaiz.github.io/2026/05/08/Spanner%E8%AE%BA%E6%96%87/">https://lwaiz.github.io/2026/05/08/Spanner%E8%AE%BA%E6%96%87/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Lwaiz.github.io" target="_blank">Leo's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a><a class="post-meta__tags" href="/tags/Spanner/">Spanner</a></div><div class="post-share"><div class="social-share" data-image="/img/background/bg6.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/05/08/Spanner/" title="Spanner"><img class="cover" src="/img/background/bg5.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Spanner</div></div><div class="info-2"><div class="info-item-1">SpannerSpanner 是 Google 自研的全球分布式、强一致、多版本、同步复制的 NewSQL 数据库，核心突破是在跨地域 &#x2F; 全球规模下，实现外部一致性（线性一致性）的分布式事务，兼顾关系型数据库的事务 &#x2F; SQL 能力与分布式系统的可扩展性、高可用。  Corbett J C, Dean J, Epstein M, et al. Spanner: Google’s globally distributed database[J]. ACM Transactions on Computer Systems (TOCS), 2013, 31(3): 1-22.  核心定位与设计目标 解决痛点：传统分布式数据库要么强一致但难扩展、要么高扩展但弱一致；Spanner 做到全球分布 + 强一致 + 高可用 + SQL&#x2F;ACID 事务。  核心能力：  跨数据中心 &#x2F; 大洲的同步复制、自动故障转移  全局外部一致性（External Consistency）：事务提交顺序与真实时间顺序一致，后提交的事务一定能看到先提交事务的结果。  支...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/05/08/Spanner/" title="Spanner"><img class="cover" src="/img/background/bg5.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Spanner</div></div><div class="info-2"><div class="info-item-1">SpannerSpanner 是 Google 自研的全球分布式、强一致、多版本、同步复制的 NewSQL 数据库，核心突破是在跨地域 &#x2F; 全球规模下，实现外部一致性（线性一致性）的分布式事务，兼顾关系型数据库的事务 &#x2F; SQL 能力与分布式系统的可扩展性、高可用。  Corbett J C, Dean J, Epstein M, et al. Spanner: Google’s globally distributed database[J]. ACM Transactions on Computer Systems (TOCS), 2013, 31(3): 1-22.  核心定位与设计目标 解决痛点：传统分布式数据库要么强一致但难扩展、要么高扩展但弱一致；Spanner 做到全球分布 + 强一致 + 高可用 + SQL&#x2F;ACID 事务。  核心能力：  跨数据中心 &#x2F; 大洲的同步复制、自动故障转移  全局外部一致性（External Consistency）：事务提交顺序与真实时间顺序一致，后提交的事务一定能看到先提交事务的结果。  支...</div></div></div></a><a class="pagination-related" href="/2026/05/08/Raft/" title="Raft"><img class="cover" src="/img/background/bg4.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Raft</div></div><div class="info-2"><div class="info-item-1">Raft 共识算法 Ongaro D, Ousterhout J. In search of an understandable consensus algorithm[C]&#x2F;&#x2F;2014 USENIX annual technical conference (USENIX ATC 14). 2014: 305-319.  Raft协议将复杂的共识问题拆解成了几个独立的模块：  Leader 选举：使用随机化选举超时（工程上常见如 150–300ms 或更大范围，具体取决于网络与故障模型）。  日志复制：Leader 通过 AppendEntries RPC 广播日志。  安全性：包括选举限制和日志匹配。   非拜占庭容错（CFT）场景：节点只会 “不说话”，不会 “说假话”  节点只会发生 故障（crash）、宕机、网络延迟 &#x2F; 丢包  不会发生：  伪造消息  发送错误数据  故意撒谎、作恶、合谋攻击     基于这个假设，Raft 可以通过多数派投票实现高效的一致性，是工业界分布式系统的主流选择。 基础概念Raft节点类型一个 Raft 集群包括...</div></div></div></a><a class="pagination-related" href="/2026/05/08/Raft%E8%AE%BA%E6%96%87/" title="Raft论文"><img class="cover" src="/img/background/bg8.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Raft论文</div></div><div class="info-2"><div class="info-item-1">Raft 论文解读Raft 将可理解性作为第一优先级 1. IntroductionRaft 的核心设计思路是强领导者模型，先选举出集群中唯一的领导者，由领导者全权负责复制日志的管理。 将复杂的共识问题，分解为三个相对独立、可分别解决的子问题：领导者选举、日志复制、安全性，通过分解大幅提升了算法的可理解性。  强领导者模型：日志只能从 Leader 流向 Follower，逻辑超级简单。  随机超时选举：用随机化选举超时时间避免投票分裂，选主快、不打架。  **安全的集群成员变更：**用 “重叠多数派” 保证加节点、减节点时不会脑裂。   2. Replicated state machines复制状态机 复制状态机 &#x3D; 让多台机器像一台机器一样干活，数据完全一样，坏几台也不影响。 共识算法，通常就是为了复制状态机而设计的。  复制状态机一般通过复制日志实现。每台服务器都保存一份日志，日志中包含一系列命令，状态机按顺序执行这些命令。 所有日志都包含相同顺序的相同命令，因此所有状态机都会处理完全一致的命令序列。由于状态机是确定性的，每台机器最终都会计算出相同的状态，并输出...</div></div></div></a><a class="pagination-related" href="/2026/05/08/Paxos%E8%AE%BA%E6%96%87/" title="Paxos论文"><img class="cover" src="/img/background/bg6.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Paxos论文</div></div><div class="info-2"><div class="info-item-1">The Paxos algorithm, when presented in plain English, is very simple. 2.1 The Problem假设有一组可以提议值的进程。共识算法需要保证：在所有被提议的值中，仅有一个值会被选定。如果没有任何值被提议，则不应选定任何值；一旦某个值被选定，进程应当能够获知这个被选定的值。 共识算法的安全性要求如下：  只有被提议过的值，才可能被选定；  最终只会有一个值被选定；  进程绝不会错误地 “认为” 某个值已被选定，除非该值确实已被选定。   共识算法中的三个角色：提议者（Proposer）、接受者（Acceptor）、学习者（Learner）。 采用经典的异步、非拜占庭模型，该模型满足：  代理以任意速度运行，可能因停机而故障，也可以重启。由于所有代理都可能在某个值被选定后发生故障并重启，因此必须要求代理在故障重启后能够保留部分信息，否则算法无法正确运行。  消息的传输延迟可以任意长，可能重复，也可能丢失，但不会被篡改。   2.2 Choosing a ValuePaxos 算法的核心灵魂，Lamport 没有...</div></div></div></a><a class="pagination-related" href="/2026/05/08/Paxos/" title="Paxos"><img class="cover" src="/img/background/bg3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-08</div><div class="info-item-2">Paxos</div></div><div class="info-2"><div class="info-item-1">Paxos 共识算法 Lamport L. Paxos made simple[J]. ACM SIGACT News (Distributed Computing Column) 32, 4 (Whole Number 121, December 2001), 2001: 51-58.   Basic Paxos 算法：描述多节点之间如何就单个值（value）达成共识。  Multi-Paxos 思想：通过执行多个 Basic Paxos 实例，就一系列值达成共识。   针对非拜占庭场景（无恶意节点），除 Raft 外，ZAB 协议、Fast Paxos 等都是基于 Paxos 改进的共识算法。 针对拜占庭场景（存在恶意节点），通常使用 工作量证明（PoW，Proof-of-Work）、权益证明（PoS，Proof-of-Stake） 等共识算法，典型应用为区块链系统。 Basic Paxos角色定义Basic Paxos 中存在 3 个重要的角色：  提议者（Proposer）：也可以叫做协调者（coordinator），负责接受客户端请求并发起提案。提案信息通常包括提案编号...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leo</div><div class="author-info-description">Leo的个人博客，记录技术和生活点滴。</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Lwaiz"><i class="fab fa-github"></i><span>关注我</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Lwaiz" target="_blank" title="GitHub"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到我的博客</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Spanner-%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB"><span class="toc-text">Spanner 论文解读</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%9B%AE%E6%A0%87"><span class="toc-text">设计目标</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="toc-text">整体架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6"><span class="toc-text">核心组件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SpanServer-%E8%BD%AF%E4%BB%B6%E6%A0%88"><span class="toc-text">SpanServer 软件栈</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%8A%BD%E8%B1%A1%EF%BC%9ADirectory%EF%BC%88%E7%9B%AE%E5%BD%95%EF%BC%89"><span class="toc-text">核心抽象：Directory（目录）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%8A%80%E6%9C%AF%EF%BC%9ATrueTime-API"><span class="toc-text">核心技术：TrueTime API</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%E5%AE%9A%E4%B9%89"><span class="toc-text">接口定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="toc-text">实现原理</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#1-Introduction"><span class="toc-text">1. Introduction</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-Implementation-%E5%AE%9E%E7%8E%B0"><span class="toc-text">2. Implementation  实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E9%83%A8%E7%BD%B2%E5%8D%95%E5%85%83"><span class="toc-text">基本部署单元</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6%E8%81%8C%E8%B4%A3"><span class="toc-text">核心组件职责</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-SpanServer-Software-Stack-%E8%BD%AF%E4%BB%B6%E6%A0%88"><span class="toc-text">2.1 SpanServer Software Stack 软件栈</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-1-Tablet%EF%BC%88%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E5%8D%95%E5%85%83%EF%BC%89"><span class="toc-text">2.1.1 Tablet（数据存储单元）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-2-Paxos-%E5%A4%8D%E5%88%B6"><span class="toc-text">2.1.2 Paxos 复制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-3-Lock-Table%EF%BC%88%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6%EF%BC%89"><span class="toc-text">2.1.3 Lock Table（并发控制）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-4-Transaction-Manager%EF%BC%88%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86%E5%99%A8%EF%BC%89"><span class="toc-text">2.1.4 Transaction Manager（事务管理器）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-Directories-and-Placement-%E7%9B%AE%E5%BD%95%E4%B8%8E%E6%94%BE%E7%BD%AE"><span class="toc-text">2.2 Directories and Placement 目录与放置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-1-Directory%EF%BC%88%E7%9B%AE%E5%BD%95%EF%BC%89%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">2.2.1 Directory（目录）是什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-2-Directory-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%9C%B0%E4%BD%8D"><span class="toc-text">2.2.2 Directory 的核心地位</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-3-Movedir-%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1"><span class="toc-text">2.2.3 Movedir 后台任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-4-%E5%A4%8D%E5%88%B6%E6%94%BE%E7%BD%AE%E7%AD%96%E7%95%A5"><span class="toc-text">2.2.4 复制放置策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-%E6%95%B0%E6%8D%AE%E6%A8%A1%E5%9E%8B%EF%BC%88%E5%8D%8A%E5%85%B3%E7%B3%BB%E5%9E%8B%E8%AE%BE%E8%AE%A1%EF%BC%89"><span class="toc-text">2.3 数据模型（半关系型设计）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-1-%E8%AE%BE%E8%AE%A1%E5%8A%A8%E6%9C%BA"><span class="toc-text">2.3.1 设计动机</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-2-%E6%A8%A1%E5%9E%8B%E7%89%B9%E7%82%B9"><span class="toc-text">2.3.2 模型特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-3-INTERLEAVE-IN-%E8%A1%A8%E5%B5%8C%E5%A5%97%EF%BC%88%E5%85%B3%E9%94%AE%E4%BC%98%E5%8C%96%EF%BC%89"><span class="toc-text">2.3.3 INTERLEAVE IN 表嵌套（关键优化）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%A6%81%E7%82%B9%E6%80%BB%E7%BB%93"><span class="toc-text">核心要点总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-TrueTime"><span class="toc-text">3. TrueTime</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-TrueTime-API-%E6%8E%A5%E5%8F%A3"><span class="toc-text">3.1 TrueTime API 接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-TrueTime-%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="toc-text">3.2 TrueTime 实现原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-1-%E6%97%B6%E9%97%B4%E4%B8%BB%E8%8A%82%E7%82%B9%EF%BC%88Time-Master%EF%BC%89"><span class="toc-text">3.2.1 时间主节点（Time Master）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-2-%E6%97%B6%E9%97%B4%E4%BB%8E%E8%8A%82%E7%82%B9-daemon%EF%BC%88Timeslave%EF%BC%89"><span class="toc-text">3.2.2 时间从节点 daemon（Timeslave）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-3-%E6%97%B6%E9%97%B4%E4%B8%8D%E7%A1%AE%E5%AE%9A%E6%80%A7-%CE%B5"><span class="toc-text">3.3 时间不确定性 ε</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%A6%81%E7%82%B9"><span class="toc-text">核心要点</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-Concurrency-Control-%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="toc-text">4. Concurrency Control 并发控制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-%E6%97%B6%E9%97%B4%E6%88%B3%E7%AE%A1%E7%90%86"><span class="toc-text">4.1 时间戳管理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-1-Paxos-Leader-%E7%A7%9F%E7%BA%A6"><span class="toc-text">4.1.1 Paxos Leader 租约</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E4%BD%9C%E7%94%A8"><span class="toc-text">1. 作用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E6%A0%B8%E5%BF%83%E4%B8%8D%E5%8F%98%E5%BC%8F%EF%BC%88%E6%9C%80%E9%87%8D%E8%A6%81%EF%BC%89"><span class="toc-text">2. 核心不变式（最重要）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E8%AE%A9%E4%BD%8D%E8%A7%84%E5%88%99"><span class="toc-text">3. 让位规则</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-2-%E8%AF%BB%E5%86%99%E4%BA%8B%E5%8A%A1%E6%97%B6%E9%97%B4%E6%88%B3%E5%88%86%E9%85%8D"><span class="toc-text">4.1.2 读写事务时间戳分配</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E6%97%B6%E9%97%B4%E6%88%B3%E5%88%86%E9%85%8D%E6%97%B6%E6%9C%BA"><span class="toc-text">1. 时间戳分配时机</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E4%B8%A4%E5%A4%A7%E4%B8%8D%E5%8F%98%E5%BC%8F"><span class="toc-text">2. 两大不变式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E4%B8%A4%E6%9D%A1%E9%BB%84%E9%87%91%E8%A7%84%E5%88%99%EF%BC%88%E4%BF%9D%E8%AF%81%E5%A4%96%E9%83%A8%E4%B8%80%E8%87%B4%E6%80%A7%EF%BC%89"><span class="toc-text">3. 两条黄金规则（保证外部一致性）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E6%9E%81%E7%AE%80%E8%AF%81%E6%98%8E"><span class="toc-text">4. 极简证明</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-3-%E5%AE%89%E5%85%A8%E6%97%B6%E9%97%B4-t-safe"><span class="toc-text">4.1.3 安全时间 t_safe</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E4%BD%9C%E7%94%A8-1"><span class="toc-text">1. 作用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%85%AC%E5%BC%8F"><span class="toc-text">2. 公式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%8F%AF%E8%AF%BB%E6%9D%A1%E4%BB%B6"><span class="toc-text">3. 可读条件</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-4-%E5%BF%AB%E7%85%A7%E4%BA%8B%E5%8A%A1%EF%BC%88%E5%8F%AA%E8%AF%BB%EF%BC%89%E6%97%B6%E9%97%B4%E6%88%B3%E5%88%86%E9%85%8D"><span class="toc-text">4.1.4 快照事务（只读）时间戳分配</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E6%89%A7%E8%A1%8C%E4%B8%A4%E6%AD%A5"><span class="toc-text">1. 执行两步</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E6%9C%80%E7%AE%80%E5%8D%95%E5%88%86%E9%85%8D%E6%96%B9%E5%BC%8F"><span class="toc-text">2. 最简单分配方式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Spanner-%E4%BC%98%E5%8C%96%EF%BC%88%E5%87%8F%E5%B0%91%E9%98%BB%E5%A1%9E%EF%BC%89"><span class="toc-text">3. Spanner 优化（减少阻塞）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%80%BB%E7%BB%93"><span class="toc-text">核心总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-2-%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82"><span class="toc-text">4.2 实现细节</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-1-%E8%AF%BB%E5%86%99%E4%BA%8B%E5%8A%A1%EF%BC%88Read-Write-Transaction%EF%BC%89"><span class="toc-text">4.2.1 读写事务（Read-Write Transaction）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%A1%8C%E4%B8%BA"><span class="toc-text">1. 客户端行为</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%882PC%EF%BC%89%E6%B5%81%E7%A8%8B"><span class="toc-text">2. 两阶段提交（2PC）流程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%85%B3%E9%94%AE%E4%BF%9D%E8%AF%81"><span class="toc-text">3. 关键保证</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-2-%E5%BF%AB%E7%85%A7%E4%BA%8B%E5%8A%A1%EF%BC%88Snapshot-Transaction%EF%BC%89"><span class="toc-text">4.2.2 快照事务（Snapshot Transaction）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%89%8D%E6%8F%90%EF%BC%9A%E5%BF%85%E9%A1%BB%E6%9C%89-Scope%EF%BC%88%E4%BD%9C%E7%94%A8%E5%9F%9F%EF%BC%89"><span class="toc-text">1. 前提：必须有 Scope（作用域）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%8D%95%E4%B8%AA-Paxos-%E7%BB%84%E8%AF%BB%EF%BC%88%E6%9C%80%E5%B8%B8%E8%A7%81%EF%BC%89"><span class="toc-text">2. 单个 Paxos 组读（最常见）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%A4%9A-Paxos-%E7%BB%84%E8%AF%BB"><span class="toc-text">3. 多 Paxos 组读</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E7%89%B9%E7%82%B9"><span class="toc-text">4. 特点</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-3-%E5%8E%9F%E5%AD%90-Schema-%E5%8F%98%E6%9B%B4%EF%BC%88%E5%85%A8%E7%90%83%E9%9D%9E%E9%98%BB%E5%A1%9E%EF%BC%89"><span class="toc-text">4.2.3 原子 Schema 变更（全球非阻塞）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E4%BC%A0%E7%BB%9F%E9%97%AE%E9%A2%98"><span class="toc-text">1. 传统问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Spanner-%E6%96%B9%E6%A1%88%EF%BC%88%E9%9D%A0-TrueTime%EF%BC%89"><span class="toc-text">2. Spanner 方案（靠 TrueTime）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E4%BC%98%E5%8A%BF"><span class="toc-text">3. 优势</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-4-%E7%B3%BB%E7%BB%9F%E4%BC%98%E5%8C%96%EF%BC%88%E9%87%8D%E8%A6%81%E5%B7%A5%E7%A8%8B%E6%94%B9%E8%BF%9B%EF%BC%89"><span class="toc-text">4.2.4 系统优化（重要工程改进）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%98%E5%8C%96-1%EF%BC%9A%E7%BB%86%E7%B2%92%E5%BA%A6-t-safe-TM-%EF%BC%88%E6%B6%88%E9%99%A4%E4%BC%AA%E5%86%B2%E7%AA%81%EF%BC%89"><span class="toc-text">优化 1：细粒度 $t_{safe}^{TM}$（消除伪冲突）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%98%E5%8C%96-2%EF%BC%9A%E7%BB%86%E7%B2%92%E5%BA%A6-LastTS"><span class="toc-text">优化 2：细粒度 LastTS ()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%98%E5%8C%96-3%EF%BC%9At-safe-Paxos-%E7%A9%BA%E9%97%B2%E6%8E%A8%E8%BF%9B%EF%BC%88%E8%A7%A3%E5%86%B3-%E2%80%9C%E6%97%A0%E5%86%99%E5%85%A5%E5%B0%B1%E4%B8%8D%E8%83%BD%E8%AF%BB%E6%96%B0%E6%97%B6%E9%97%B4%E2%80%9D%EF%BC%89"><span class="toc-text">优化 3：t_safe^Paxos 空闲推进（解决 “无写入就不能读新时间”）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-5-Paxos-Leader-%E7%A7%9F%E7%BA%A6%E7%AE%A1%E7%90%86%EF%BC%88%E4%BF%9D%E8%AF%81%E4%B8%8D%E7%9B%B8%E4%BA%A4%EF%BC%8C%E6%A0%B8%E5%BF%83%E6%AD%A3%E7%A1%AE%E6%80%A7%EF%BC%89"><span class="toc-text">4.2.5 Paxos Leader 租约管理（保证不相交，核心正确性）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E7%9B%AE%E6%A0%87"><span class="toc-text">1. 目标</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E4%B8%8D%E7%94%A8%E9%A2%9D%E5%A4%96%E5%86%99%E6%97%A5%E5%BF%97%EF%BC%8C%E9%9D%A0-TrueTime-%E5%AE%9E%E7%8E%B0"><span class="toc-text">2. 不用额外写日志，靠 TrueTime 实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E7%A7%9F%E7%BA%A6%E5%8C%BA%E9%97%B4%E8%AE%A1%E7%AE%97"><span class="toc-text">3. 租约区间计算</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E4%B8%8D%E7%9B%B8%E4%BA%A4%E8%AF%81%E6%98%8E%E6%80%9D%E8%B7%AF"><span class="toc-text">4. 不相交证明思路</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%80%BB%E7%BB%93-1"><span class="toc-text">核心总结</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5-Evaluation"><span class="toc-text">5. Evaluation</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#6-Related-Work"><span class="toc-text">6. Related Work</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#7-Future-Work"><span class="toc-text">7. Future Work</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#8-Conclusions"><span class="toc-text">8. Conclusions</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文"><img src="/img/background/bg6.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Spanner论文"/></a><div class="content"><a class="title" href="/2026/05/08/Spanner%E8%AE%BA%E6%96%87/" title="Spanner论文">Spanner论文</a><time datetime="2026-05-08T08:36:28.000Z" title="发表于 2026-05-08 16:36:28">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Spanner/" title="Spanner"><img src="/img/background/bg5.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Spanner"/></a><div class="content"><a class="title" href="/2026/05/08/Spanner/" title="Spanner">Spanner</a><time datetime="2026-05-08T08:35:28.000Z" title="发表于 2026-05-08 16:35:28">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Paxos/" title="Paxos"><img src="/img/background/bg3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Paxos"/></a><div class="content"><a class="title" href="/2026/05/08/Paxos/" title="Paxos">Paxos</a><time datetime="2026-05-08T08:32:05.000Z" title="发表于 2026-05-08 16:32:05">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Paxos%E8%AE%BA%E6%96%87/" title="Paxos论文"><img src="/img/background/bg6.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Paxos论文"/></a><div class="content"><a class="title" href="/2026/05/08/Paxos%E8%AE%BA%E6%96%87/" title="Paxos论文">Paxos论文</a><time datetime="2026-05-08T08:32:05.000Z" title="发表于 2026-05-08 16:32:05">2026-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/08/Raft/" title="Raft"><img src="/img/background/bg4.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Raft"/></a><div class="content"><a class="title" href="/2026/05/08/Raft/" title="Raft">Raft</a><time datetime="2026-05-08T08:26:05.000Z" title="发表于 2026-05-08 16:26:05">2026-05-08</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Leo</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><script src="/js/tw_cn.js?v=5.5.4"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script><meting-js server="netease" type="playlist" id="964806107" fixed="true" autoplay="false" loop="all" theme="#49b1f5"> </meting-js><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || item.innerHTML || ""
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    if (e.request.status === 404) {
+      false
+        ? pjax.loadUrl('/404.html')
+        : window.location.href = e.request.responseURL
+    }
+  })
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
