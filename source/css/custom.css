@@ -1,0 +1,155 @@
+/* 文章正文字体（rem 单位） */
+.post-content,
+.post-content p,
+.post-content li,
+.post-content blockquote {
+  font-size: 1.125rem !important; /* 18px → 最舒服阅读大小 */
+  line-height: 1.8 !important;
+}
+
+/* 文章标题大小 */
+.post-content h1 { font-size: 2rem !important; }
+.post-content h2 { font-size: 1.75rem !important; }
+.post-content h3 { font-size: 1.5rem !important; }
+
+/* 代码块字体 */
+.post-content pre {
+  font-size: 1rem !important;
+}
+
+/* 👇 只作用于 profile 页面的自定义容器，绝对不会影响其他页面 */
+.profile-content,
+.profile-content p,
+.profile-content li,
+.profile-content strong,
+.profile-content a,
+.profile-content span,
+.profile-content div,
+.profile-content .wechat-qr p {
+  font-size: 1.125rem !important; /* 和文章正文完全一致 */
+  line-height: 1.8 !important;
+}
+
+/* 标题单独设置 */
+.profile-content h1 { font-size: 2rem !important;}
+.profile-content h2 { font-size: 1.75rem !important;}
+.profile-content h3 { font-size: 1.5rem !important;}
+
+/* 二维码文字同步 */
+.wechat-qr p {
+  font-size: 0.9rem !important;
+  line-height: 1.8 !important;
+}
+
+/* 侧边栏 目录字体 */
+#sidebar .toc-item a {
+  font-size: 1.125rem !important;
+  line-height: 1.7 !important;
+}
+
+/* 悬浮目录（文章右侧弹出目录） */
+.toc-widget .toc-item a {
+  font-size: 1.125rem !important;
+  line-height: 1.7 !important;
+}
+
+/* 目录一级、二级缩进微调（可选） */
+.toc-item.toc-level-2 {
+  padding-left: 0.5rem;
+}
+.toc-item.toc-level-3 {
+  padding-left: 1rem;
+}
+
+/* 个人中心头像美化 */
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  margin: 1rem auto;
+  /* 核心：透明边框 */
+  border: 3px solid transparent;
+  
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  display: block;
+}
+
+/* 深色模式适配 */
+[data-theme="dark"] .profile-avatar {
+  border-color: transparent;
+  
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* 鼠标悬停：发光+放大效果 */
+.profile-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(73, 177, 245, 0.6);
+}
+
+/* 微信二维码基础美化 */
+.wechat-qr {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+.wechat-qr img {
+  width: 180px;
+  height: 180px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 2px solid #eee; /* 浅色模式边框 */
+}
+/* 适配深色模式 */
+[data-theme="dark"] .wechat-qr img {
+  border-color: #333;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.wechat-qr p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+.wechat-qr img {
+  transition: transform 0.3s ease;
+}
+.wechat-qr img:hover {
+  transform: scale(1.05); /* 鼠标悬停时放大5% */
+}
+
+
+/* ===== Butterfly 原生说说 ========== */
+
+.shuoshuo_content {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 12px 0 !important;
+}
+.shuoshuo_content p {
+  margin: 0 !important;
+  width: calc(33.333% - 6px) !important;
+}
+/* 图片样式 */
+.shuoshuo_content img {
+  width: 100% !important;
+  aspect-ratio: 1/1 !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+  cursor: zoom-in !important;
+  transition: 0.2s !important;
+}
+.shuoshuo_content img:hover {
+  opacity: 0.9 !important;
+}
+
+/* 默认隐藏歌词面板 */
+#aplayer .aplayer-lrc {
+  display: none !important;
+}
+/* 展开时正常显示 */
+#aplayer.aplayer-lrc-show .aplayer-lrc {
+  display: block !important;
+}

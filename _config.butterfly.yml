@@ -1,0 +1,910 @@
+# --------------------------------------
+# Hexo Butterfly 主题配置文件
+# 如有疑问请查阅官方文档
+# 中文文档: https://butterfly.js.org/
+# 英文文档: https://butterfly.js.org/en/
+# --------------------------------------
+
+# --------------------------------------
+# 导航栏 设置
+# --------------------------------------
+nav:
+  # 导航栏 Logo 图片地址
+  logo: /img/avatar.png
+  # 是否显示网站标题
+  display_title: true
+  # 文章页是否显示文章标题
+  display_post_title: true
+  # 导航栏是否固定在顶部
+  fixed: false
+
+# 导航菜单配置
+menu:
+  # 格式：名称: 路径 || 图标
+  # 支持二级菜单写法示例：
+  # 列表||fas fa-list:
+  #   音乐: /music/ || fas fa-music
+  #   电影: /movies/ || fas fa-video
+  主页: / || fas fa-home
+  归档: /archives/ || fas fa-archive
+  标签: /tags/ || fas fa-tags
+  分类: /categories/ || fas fa-folder-open
+  随笔: /shuoshuo/ || fas fa-comment-dots
+  个人中心: /profile/ || fas fa-user
+
+# --------------------------------------
+# 代码块 设置
+# --------------------------------------
+code_blocks:
+  # 代码块主题：darker / pale night / light / ocean / false
+  theme: light
+  # 是否开启 Mac 风格窗口头部
+  macStyle: true
+  # 代码块最大高度 (单位 px)，false 不限制
+  height_limit: false
+  # 代码是否自动换行
+  word_wrap: false
+
+  # 代码块工具栏
+  copy: true        # 复制按钮
+  language: true    # 显示代码语言
+  # true: 默认折叠代码块 | false: 默认展开 | none: 展开且隐藏折叠按钮
+  shrink: false
+  fullpage: true   # 代码全屏按钮
+
+# 社交媒体图标
+# 格式：图标类名: 链接 || 悬浮文字 || 图标颜色
+social:
+  fab fa-github: https://github.com/Lwaiz || GitHub || '#24292e'
+  # fab fa-github: https://github.com/xxxxx || Github || '#24292e'
+  # fas fa-envelope: mailto:xxxxxx@gmail.com || 邮箱 || '#4a7dbe'
+
+# --------------------------------------
+# 图片 相关设置
+# --------------------------------------
+
+# 网站图标
+favicon: /img/favicon.png
+
+# 作者信息
+author:
+  name: Leo
+  link:
+
+# 侧边栏头像
+avatar:
+  img: /img/avatar.png  # 头像路径
+  effect: false         # 是否开启头像旋转特效
+
+# 是否关闭所有页面顶部大图
+disable_top_img: false
+
+# 页面没单独设置顶部图时，默认展示的顶部图
+default_top_img:
+  - /img/default-top-img.png
+
+# 首页顶部大图
+index_img:
+
+# 归档页顶部大图
+archive_img:
+
+# 标签页（非标签列表页）顶部图
+tag_img:
+
+# 为每个标签单独设置顶部图
+# 格式：- 标签名: 图片地址
+tag_per_img:
+
+# 分类页（非分类列表页）顶部图
+category_img:
+
+# 为每个分类单独设置顶部图
+# 格式：- 分类名: 图片地址
+category_per_img:
+
+# 页脚背景图
+footer_img: false
+#footer_bg : transparent 
+
+# 网站背景
+background:
+  # /img/background/bg3.png
+
+# 文章封面配置
+cover:
+  # 首页是否显示封面
+  index_enable: true
+  # 侧边栏文章列表是否显示封面
+  aside_enable: true
+  # 归档页是否显示封面
+  archives_enable: true
+  # 没设置封面时的默认封面图
+  default_cover:
+    # - xxx.jpg
+
+# 图片404兜底图
+error_img:
+  flink: /img/friend_404.gif  # 友链失效图
+  post_page: /img/404.jpg     # 文章图片失效图
+
+# 简易404页面
+error_true:
+  enable: false
+  subtitle: '页面走丢了'
+  background: /img/error-page.png
+
+# 文章元信息（日期、分类、标签等）
+post_meta:
+  # 首页文章信息
+  page:
+    # 日期显示：created 创建时间 / updated 更新时间 / both 都显示
+    date_type: created
+    # 日期格式：date 正常日期 / relative 相对时间
+    date_format: date
+    categories: true  # 是否显示分类
+    tags: false       # 是否显示标签
+    label: true       # 是否显示标签样式
+  # 文章内页信息
+  post:
+    # 位置：left 左对齐 / center 居中
+    position: left
+    date_type: both
+    date_format: date
+    categories: true
+    tags: true
+    label: true
+
+# --------------------------------------
+# 首页 布局设置
+# --------------------------------------
+
+# 首页顶部图 网站信息垂直位置
+index_site_info_top:
+# 首页顶部图高度
+index_top_img_height:
+
+# 首页副标题
+subtitle:
+  enable: true       # 是否开启副标题
+  effect: true       # 打字机效果
+  # 自定义 typed.js 打字机配置
+  typed_option:
+    typeSpeed: 170
+    backSpeed: 100
+    backDelay: 2000
+    loop: true
+  # 副标题数据源：false关闭 / 1一言 / 2随机文案 / 3今日诗词
+  source: false
+  # 副标题文案列表
+  sub:
+    - 欢迎来到 Leo's Blog !
+    - 水无定，花有尽，会相逢，可是人生长在别离中。
+    - 而今尘尽光生，照破青山万朵。
+    - 休恋逝水，苦海回身，早悟兰因。
+
+# 首页文章排版布局
+# 1:封面左 信息右 | 2:封面右 信息左 | 3:左右交替
+# 4:封面在上 信息在下 | 5:信息悬浮在封面 | 6/7:瀑布流布局
+index_layout: 3
+
+# 首页文章简介展示方式
+# 1:只显示description描述
+# 2:有描述显描述，没有显自动摘要
+# 3:只显自动摘要(默认)
+# false: 不显示简介
+index_post_content:
+  method: 2
+  length: 500  # 自动摘要字数
+
+# --------------------------------------
+# 文章 页面设置
+# --------------------------------------
+
+# 文章目录
+toc:
+  post: true           # 文章页开启目录
+  page: false          # 普通页面开启目录
+  number: false        # 目录是否显示序号
+  expand: true         # 是否默认展开全部目录
+  style_simple: false  # 简约目录样式
+  scroll_percent: true # 滚动显示阅读百分比
+
+# 文章版权声明
+post_copyright:
+  enable: true
+  decode: false
+  author_href:
+  # license: CC BY-NC-SA 4.0
+  # license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+# 赞赏/打赏
+reward:
+  enable: false
+  text:
+  QR_code:
+    # - img: /img/wechat.jpg
+    #   link:
+    #   text: 微信
+    # - img: /img/alipay.jpg
+    #   link:
+    #   text: 支付宝
+
+# 在线编辑文章按钮
+post_edit:
+  enable: false
+  # 仓库编辑地址前缀
+  url:
+
+# 相关推荐文章
+related_post:
+  enable: true
+  limit: 6        # 展示数量
+  date_type: created # 排序依据 创建/更新时间
+
+# 文章上下篇切换
+# 1:下一篇是更早文章 | 2:下一篇是更新文章 | false关闭
+post_pagination: 2
+
+# 文章过时提醒
+noticeOutdate:
+  enable: false
+  style: flat       # 样式 simple/flat
+  limit_day: 365    # 多少天后提示过时
+  position: top     # 提示位置 top/bottom
+  message_prev: 距离上次更新已
+  message_next: 天，内容可能已过时。
+
+# --------------------------------------
+# 页脚 设置
+# --------------------------------------
+footer:
+  nav:
+  owner:
+    enable: true
+    since: 2026     # 建站起始年份
+  # 主题和框架版权信息
+  copyright:
+    enable: true
+    version: true   # 显示主题版本
+  custom_text:      # 自定义页脚文字
+
+# --------------------------------------
+# 侧边栏 设置
+# --------------------------------------
+aside:
+  enable: true       # 开启侧边栏
+  hide: false        # 默认不隐藏
+  button: true       # 右下角显示侧边栏开关
+  mobile: true       # 移动端是否显示侧边栏
+  position: right    # 位置 left/right
+  display:
+    archive: true
+    tag: true
+    category: true
+
+  # 作者卡片
+  card_author:
+    enable: true
+    description:     # 个人简介
+    button:
+      enable: true
+      icon: fab fa-github
+      text: 关注我
+      link: https://github.com/Lwaiz
+
+  # 公告卡片
+  card_announcement:
+    enable: true
+    content: 欢迎来到我的博客
+
+  # 最新文章
+  card_recent_post:
+    enable: true
+    limit: 5         # 展示数量 0显示全部
+    sort: date       # 排序 date/updated
+    sort_order:
+
+  # 最新评论
+  card_newest_comments:
+    enable: false
+    sort_order:
+    limit: 6
+    storage: 10      # 缓存时间(分钟)
+    avatar: true
+
+  # 分类卡片
+  card_categories:
+    enable: true
+    limit: 8
+    expand: none     # 是否展开 none/true/false
+    sort_order:
+
+  # 标签卡片
+  card_tags:
+    enable: true
+    limit: 40
+    color: false     # 标签是否彩色
+    custom_colors:
+    orderby: random  # 标签排序 random/name/length
+    order: 1         # 1升序 -1降序
+    sort_order:
+
+  # 归档卡片
+  card_archives:
+    enable: true
+    type: monthly    # 归档类型 monthly每月/yearly每年
+    format: MMMM YYYY
+    order: -1
+    limit: 8
+    sort_order:
+
+  # 文章系列
+  card_post_series:
+    enable: true
+    series_title: false
+    orderBy: 'date'
+    order: -1
+
+  # 网站信息统计
+  card_webinfo:
+    enable: true
+    post_count: true     # 文章总数
+    last_push_date: true # 最后更新时间
+    sort_order:
+    runtime_date:        # 网站运行时间
+
+# --------------------------------------
+# 右下角悬浮按钮 设置
+# --------------------------------------
+
+# 右下角按钮距离底部距离
+rightside_bottom:
+
+# 简繁切换
+translate:
+  enable: true
+  field: site # 应用范围：site全站/ post文章页
+  default: 繁
+  defaultEncoding: 2  # 1繁体 2简体
+  translateDelay: 0
+  msgToTraditionalChinese: '繁'
+  msgToSimplifiedChinese: '簡'
+
+# 阅读模式
+readmode: true
+
+# 深色模式
+darkmode:
+  enable: true        # 开启深色模式
+  button: true        # 显示切换按钮
+  # 自动切换：1跟随系统+定时 2仅定时 false关闭
+  autoChangeMode: false
+  start:  # 开始时间
+  end:    # 结束时间
+
+# 回到顶部是否显示滚动百分比
+rightside_scroll_percent: false
+
+# 右下角按钮排序
+rightside_item_order:
+  enable: false
+  hide:
+  show:
+
+# 配置按钮动画
+rightside_config_animation: true
+
+# --------------------------------------
+# 全局 通用设置
+# --------------------------------------
+
+# 锚点链接
+anchor:
+  auto_update: false  # 滚动时更新地址栏锚点
+  click_to_scroll: false
+
+# 图片图注
+photofigcaption: false
+
+# 复制内容
+copy:
+  enable: true
+  copyright:
+    enable: false      # 复制后追加版权信息
+    limit_count: 1500   # 超过多少字才追加
+
+# 字数统计 需要安装 hexo-wordcount 插件
+wordcount:
+  enable: false
+  post_wordcount: true   # 文章字数
+  min2read: true         # 阅读时长
+  total_wordcount: true  # 全站总字数
+
+# 不蒜子 访客统计
+busuanzi:
+  site_uv: true   # 独立访客
+  site_pv: true   # 总访问量
+  page_pv: true   # 单页访问量
+
+# --------------------------------------
+# 数学公式 设置
+# --------------------------------------
+math:
+  # 选择：mathjax / katex 留空关闭
+  use:
+  per_page: true  # 是否每页加载公式脚本
+  hide_scrollbar: false
+
+  mathjax:
+    enableMenu: true
+    tags: none  # 公式编号 all/ams/none
+
+  katex:
+    copy_tex: false # 复制公式源码
+
+# --------------------------------------
+# 搜索 功能
+# --------------------------------------
+search:
+  # 选择：algolia_search / local_search / docsearch 留空关闭
+  use:
+  placeholder:
+
+  # Algolia 搜索
+  algolia_search:
+    hitsPerPage: 6
+
+  # 本地搜索
+  local_search:
+    preload: false       # 页面加载预缓存搜索数据
+    top_n_per_article: 1
+    unescape: false
+    pagination:
+      enable: false
+      hitsPerPage: 8
+    CDN:
+
+  # Docsearch
+  docsearch:
+    appId:
+    apiKey:
+    indexName:
+    option:
+
+# --------------------------------------
+# 分享 功能
+# --------------------------------------
+share:
+  # 选择：sharejs / addtoany 留空关闭
+  use: sharejs
+
+  sharejs:
+    sites: facebook,x,wechat,weibo,qq
+
+  addtoany:
+    item: facebook,x,wechat,sina_weibo,facebook_messenger,email,copy_link
+
+# --------------------------------------
+# 评论系统 设置
+# --------------------------------------
+comments:
+  # 可填两个评论系统，逗号分隔，第一个默认显示
+  # 可选：Disqus/Disqusjs/Livere/Gitalk/Valine/Waline/Utterances/Twikoo/Giscus
+  use:
+  text: true        # 按钮显示评论名
+  lazyload: false   # 滚动到视图再加载评论
+  count: false      # 顶部图显示评论数
+  card_post_count: false # 侧边栏显示评论数
+
+# 以下为各评论系统配置，启用后填写对应参数即可
+disqus:
+  shortname:
+  apikey:
+
+disqusjs:
+  shortname:
+  apikey:
+  option:
+
+livere:
+  uid:
+
+gitalk:
+  client_id:
+  client_secret:
+  repo:
+  owner:
+  admin:
+  option:
+
+valine:
+  appId:
+  appKey:
+  avatar: monsterid
+  serverURLs:
+  bg:
+  visitor: false
+  option:
+
+waline:
+  serverURL:
+  bg:
+  pageview: false
+  option:
+
+utterances:
+  repo:
+  issue_term: pathname
+  light_theme: github-light
+  dark_theme: photon-dark
+  js:
+  option:
+
+facebook_comments:
+  app_id:
+  user_id:
+  pageSize: 10
+  order_by: social
+  lang: en_US
+
+twikoo:
+  envId:
+  region:
+  visitor: false
+  option:
+
+giscus:
+  repo:
+  repo_id:
+  category_id:
+  light_theme: light
+  dark_theme: dark
+  js:
+  option:
+
+remark42:
+  host:
+  siteId:
+  option:
+
+artalk:
+  server:
+  site:
+  visitor: false
+  option:
+
+# --------------------------------------
+# 在线聊天 功能
+# --------------------------------------
+chat:
+  # 选择：chatra/tidio/crisp 留空关闭
+  use:
+  rightside_button: false # 右下角聊天按钮
+  button_hide_show: false
+
+chatra:
+  id:
+
+tidio:
+  public_key:
+
+crisp:
+  website_id:
+
+# --------------------------------------
+# 网站统计 分析
+# --------------------------------------
+baidu_analytics:    # 百度统计ID
+google_analytics:   # 谷歌分析ID
+cloudflare_analytics: # Cloudflare 分析
+microsoft_clarity:  # 微软 Clarity
+
+umami_analytics:
+  enable: false
+  serverURL:
+  script_name: script.js
+  website_id:
+  option:
+  UV_PV:
+    site_uv: false
+    site_pv: false
+    page_pv: false
+    token:
+
+google_tag_manager:
+  tag_id:
+  domain:
+
+# --------------------------------------
+# 广告 设置
+# --------------------------------------
+google_adsense:
+  enable: false
+  auto_ads: true
+  js: https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js
+  client:
+  enable_page_level_ads: true
+
+ad:
+  index:  # 首页插广告
+  aside:  # 侧边栏插广告
+  post:   # 文章页插广告
+
+# --------------------------------------
+# 站点验证 （搜索引擎收录）
+# --------------------------------------
+site_verification:
+  # - name: google-site-verification
+  #   content: 验证码
+  # - name: baidu-site-verification
+  #   content: 验证码
+
+# --------------------------------------
+# 美化 & 特效 设置
+# --------------------------------------
+
+# 主题配色自定义
+theme_color:
+  enable: true
+  main: "#49B1F5"
+  paginator: "#00c4b6"
+  button_hover: "#FF7242"
+  text_selection: "#00c4b6"
+  link_color: "#99a9bf"
+  meta_color: "#858585"
+  hr_color: "#A4D8FA"
+  code_foreground: "#F47466"
+  code_background: "rgba(27, 31, 35, .05)"
+  toc_color: "#00c4b6"
+  blockquote_padding_color: "#49b1f5"
+  blockquote_background_color: "#49b1f5"
+  scrollbar_color: "#49b1f5"
+  meta_theme_color_light: "ffffff"
+  meta_theme_color_dark: "#0d0d0d"
+
+# 分类/标签页 UI 风格
+category_ui:
+tag_ui:
+
+# UI 元素圆角
+rounded_corners_ui: true
+
+# 文本两端对齐
+text_align_justify: false
+
+# 头部/页脚遮罩
+mask:
+  header: true
+  footer: false
+
+# 加载动画
+preloader:
+  enable: false
+  source: 1  # 1全屏加载 2进度条
+  pace_css_url:
+
+# 页面切换过渡动画
+enter_transitions: true
+
+# 默认显示模式 light / dark
+display_mode: light
+
+# 文章内容美化
+beautify:
+  enable: false
+  field: post
+  title_prefix_icon:
+  title_prefix_icon_color:
+
+# 全局字体
+font:
+  global_font_size:
+  code_font_size:
+  font_family:
+  code_font_family:
+
+# 网站标题字体
+blog_title_font:
+  font_link:
+  font_family:
+
+# 分割线图标
+hr_icon:
+  enable: true
+  icon:
+  icon_top:
+
+# 打字机特效
+activate_power_mode:
+  enable: false
+  colorful: true
+  shake: true
+  mobile: false
+
+# 背景特效
+# 彩带背景
+canvas_ribbon:
+  enable: false
+  size: 150
+  alpha: 0.6
+  zIndex: -1
+  click_to_change: false
+  mobile: false
+
+# 飘落彩带
+canvas_fluttering_ribbon:
+  enable: false
+  mobile: false
+
+# 线条粒子背景
+canvas_nest:
+  enable: false
+  color: '0,0,255'
+  opacity: 0.7
+  zIndex: -1
+  count: 99
+  mobile: false
+
+# 点击烟花特效
+fireworks:
+  enable: false
+  zIndex: 9999
+  mobile: false
+
+# 点击爱心特效
+click_heart:
+  enable: false
+  mobile: false
+
+# 点击文字特效
+clickShowText:
+  enable: false
+  text:
+    # - 字1
+    # - 字2
+  fontSize: 15px
+  random: false
+  mobile: false
+
+# --------------------------------------
+# 图片放大 灯箱 设置
+# --------------------------------------
+lightbox:
+  # 可选：fancybox / medium_zoom 留空关闭
+
+# --------------------------------------
+# 标签插件 设置
+# --------------------------------------
+
+# 文章系列
+series:
+  enable: false
+  orderBy: 'title'
+  order: 1
+  number: true
+
+# 乐谱插件
+abcjs:
+  enable: false
+  per_page: true
+
+# Mermaid 流程图
+mermaid:
+  enable: false
+  code_write: false
+  theme:
+    light: default
+    dark: dark
+  open_in_new_tab: true
+  zoom_pan: true
+
+# Chartjs 图表
+chartjs:
+  enable: false
+  fontColor:
+    light: 'rgba(0, 0, 0, 0.8)'
+    dark: 'rgba(255, 255, 255, 0.8)'
+  borderColor:
+    light: 'rgba(0, 0, 0, 0.1)'
+    dark: 'rgba(255, 255, 255, 0.2)'
+  scale_ticks_backdropColor:
+    light: 'transparent'
+    dark: 'transparent'
+
+# 提示框插件
+note:
+  style: flat # simple/modern/flat/disabled
+  icons: true
+  border_radius: 3
+  light_bg_offset: 0
+
+# --------------------------------------
+# 其他 杂项设置
+# --------------------------------------
+
+# Pjax 无刷新跳转
+pjax:
+  enable: true
+  exclude:
+    # - /xxxxxx/
+
+# Aplayer 音乐播放器注入
+aplayerInject:
+  enable: false
+  per_page: true
+
+# 右下角消息通知
+snackbar:
+  enable: false
+  position: bottom-left
+  bg_light: '#49b1f5'
+  bg_dark: '#1f1f1f'
+
+# 预加载页面
+instantpage: false
+
+# 图片懒加载
+lazyload:
+  enable: false
+  native: false
+  field: site
+  placeholder:
+  blur: false
+
+# PWA 离线应用
+pwa:
+  enable: false
+  manifest:
+  apple_touch_icon:
+  favicon_32_32:
+  favicon_16_16:
+  mask_icon:
+
+# Open Graph 社交元标签
+Open_Graph_meta:
+  enable: true
+  option:
+
+# 结构化数据 搜索引擎优化
+structured_data:
+  enable: false
+  alternate_name:
+
+# 自动补全 CSS 前缀
+css_prefix: true
+
+# 注入自定义代码
+# inject:
+#   head:
+#     # - <link rel="stylesheet" href="/xxx.css">
+#   bottom:
+#     # - <script src="xxxx"></script>
+
+inject:
+  head:
+    - <link rel="stylesheet" href="/css/style.css" media="all">
+    - <link rel="stylesheet" href="/css/custom.css">
+    - <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+  bottom:
+    - <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+    - <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+    - <meting-js
+        server="netease"
+        type="playlist"
+        id="964806107"
+        fixed="true"
+        autoplay="false"
+        loop="all"
+        theme="#49b1f5"
+        lrcFolded="true">
+      </meting-js>
+  
+
+# CDN 资源配置
+CDN:
+  internal_provider: local    # 主题内部资源CDN
+  third_party_provider: jsdelivr # 第三方资源CDN
+  version: true
+  custom_format:
+  option:

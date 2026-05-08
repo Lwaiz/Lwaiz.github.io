@@ -1,0 +1,100 @@
+# Hexo 官方文档
+# Hexo 官方文档：https://hexo.io/zh-cn/docs/configuration.html
+
+# 站点基础信息
+title: Leo's Blog           # 博客标题（显示在浏览器标签、首页顶部）
+subtitle: ''                # 博客副标题（可空）
+description: 'Leo的个人博客，记录技术和生活点滴。'  # 博客描述（SEO 搜索展示）
+keywords: 博客, 技术, 生活   # 关键词（SEO 用）
+author: Leo                 # 作者名称
+language: zh-CN             # 网站语言（简体中文）
+timezone: 'Asia/Shanghai'   # 时区（上海时区）
+
+# 网址设置
+## 这里必须填你的真实网址，例如 GitHub Pages 就填 https://Lwaiz.github.io
+url: https://Lwaiz.github.io
+permalink: :year/:month/:day/:title/  # 文章链接格式：年/月/日/文章名
+permalink_defaults:
+pretty_urls:
+  trailing_index: true  # 是否保留链接末尾的 index.html
+  trailing_html: true   # 是否保留链接末尾的 .html
+
+# 目录结构（一般不用改）
+source_dir: source      # 文章、图片等源文件存放目录
+public_dir: public      # 生成的静态网页存放目录
+tag_dir: tags           # 标签页目录
+archive_dir: archives   # 归档页目录
+category_dir: categories # 分类页目录
+code_dir: downloads/code
+i8n_dir: :lang
+skip_render:            # 跳过渲染的文件
+
+# 写作配置
+new_post_name: :title.md      # 新建文章的文件名格式
+default_layout: post           # 默认文章布局
+titlecase: false               # 标题是否自动首字母大写
+external_link:
+  enable: true                 # 外部链接是否在新标签打开
+  field: site                  # 应用到整个网站
+  exclude: ''
+filename_case: 0
+render_drafts: false           # 是否渲染草稿文章
+post_asset_folder: true        # 文章图片自动创建同名文件夹
+marked:
+  prependRoot: true
+  postAsset: true
+relative_link: false
+future: true
+syntax_highlighter: highlight.js  # 代码高亮插件
+highlight:
+  line_number: true           # 代码显示行号
+  auto_detect: false
+  tab_replace: ''
+  wrap: true
+  hljs: false
+prismjs:
+  preprocess: true
+  line_number: true
+  tab_replace: ''
+
+# 首页设置
+index_generator:
+  path: ''               # 首页路径
+  per_page: 10           # 每页显示 10 篇文章
+  order_by: -date        # 按时间倒序排列（最新在前）
+
+# 分类与标签
+default_category: uncategorized  # 默认分类
+category_map:                    # 分类别名映射
+tag_map:                         # 标签别名映射
+
+# 元数据（SEO 用，一般不动）
+meta_generator: true
+
+# 日期 / 时间格式
+date_format: YYYY-MM-DD    # 日期格式：年-月-日
+time_format: HH:mm:ss     # 时间格式：时:分:秒
+updated_option: 'mtime'
+
+# 分页设置
+per_page: 10               # 每页文章数量
+pagination_dir: page       # 分页目录
+
+# 包含/排除文件（一般不用改）
+include:
+exclude:
+ignore:
+
+# 扩展插件
+theme: butterfly           # 当前使用 Butterfly 主题
+
+# 支持 Aplayer 音乐播放器插件
+aplayer:
+  meting: true          # 启用歌单解析（网易云/QQ音乐等）
+  asset_inject: false   # 禁止插件自动注入资源（避免冲突）
+
+# 部署配置（发布到 GitHub Pages）
+deploy:
+  type: git                # 部署类型：git
+  repo: https://github.com/Lwaiz/Lwaiz.github.io.git  # 你的 GitHub 仓库
+  branch: main             # 部署分支

@@ -1,0 +1,25 @@
+# 说说格式（官方标准）
+# author/avatar 可省略，自动读取主题配置
+# date 必填 | content 必填 | key 评论用 | tags 可选
+
+- date: 2026-05-08 20:00:00
+  key: say-001
+  content: |
+    博客正式上线啦！🎉 搭配 Butterfly 主题，简洁又好看～
+  tags:
+    - 随笔
+
+- date: 2026-05-07 19:00:00
+  key: say-002
+  content: |
+    分享一下！📸
+    ![风景图](/img/background/bg1.png)
+
+  tags:
+    - 日常
+    - 记录
+
+- date: 2026-05-06 18:00:00
+  key: say-003
+  content: |
+    持续学习，持续分享，不断进步 💡
