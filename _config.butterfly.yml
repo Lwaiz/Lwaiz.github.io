@@ -109,7 +109,7 @@ footer_img: false
 
 # 网站背景
 background:
-  # /img/background/bg3.png
+  /img/background/bg3.png
 
 # 文章封面配置
 cover:
@@ -182,6 +182,10 @@ subtitle:
     - 水无定，花有尽，会相逢，可是人生长在别离中。
     - 而今尘尽光生，照破青山万朵。
     - 休恋逝水，苦海回身，早悟兰因。
+    - 但远山长，云山乱，晓山青。
+    - 愿君千万岁，无岁不逢春。
+    - 大知闲闲，小知间间。
+    - 浮生暂寄梦中梦，世事如闻风里风。
 
 # 首页文章排版布局
 # 1:封面左 信息右 | 2:封面右 信息左 | 3:左右交替
@@ -675,7 +679,7 @@ text_align_justify: false
 
 # 头部/页脚遮罩
 mask:
-  header: true
+  header: false
   footer: false
 
 # 加载动画
@@ -707,7 +711,8 @@ font:
 # 网站标题字体
 blog_title_font:
   font_link:
-  font_family:
+  font_family: LeviBrush, 'MoMaoLaoWu'
+  font-size: 40px
 
 # 分割线图标
 hr_icon:
@@ -883,9 +888,12 @@ css_prefix: true
 
 inject:
   head:
+    - <link rel="stylesheet" href="/css/frosted-glass.css">
     - <link rel="stylesheet" href="/css/style.css" media="all">
     - <link rel="stylesheet" href="/css/custom.css">
     - <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+    - <link rel="stylesheet" href="/css/font.css">
+    - <link rel="stylesheet" href="/css/aplayer.css">
   bottom:
     - <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
     - <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
@@ -896,10 +904,10 @@ inject:
         fixed="true"
         autoplay="false"
         loop="all"
-        theme="#49b1f5"
         lrcFolded="true">
       </meting-js>
-  
+    - <script>var observer=new MutationObserver(function(e){var t=document.querySelector(".aplayer-icon-lrc");t&&(setTimeout(function(){t.click()},1),observer.disconnect())});observer.observe(document.body,{childList:true,subtree:true});</script>
+    
 
 # CDN 资源配置
 CDN:

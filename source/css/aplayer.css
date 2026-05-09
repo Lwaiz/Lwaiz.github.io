@@ -1,0 +1,161 @@
+/* ====================== APlayer 音乐播放器 - 美化样式 ======================
+ * 功能：日间/黑暗双模式 | 毛玻璃效果 | 圆角优化 | 自定义配色 | 播放高亮
+ * ======================================================================= */
+
+/* -------------------------- 基础全局样式 -------------------------- */
+.aplayer {
+  background: rgba(255, 255, 255, 0.25) !important;
+  position: relative;
+}
+
+/* 统一毛玻璃效果 */
+.aplayer-list,
+.aplayer-info {
+  backdrop-filter: blur(25px);
+}
+
+/* 固定播放器基础设置 */
+.aplayer.aplayer-fixed .aplayer-lrc::after,
+.aplayer.aplayer-fixed .aplayer-lrc::before {
+  display: none;
+}
+
+.aplayer.aplayer-fixed .aplayer-body {
+  background: rgba(255, 255, 255, 0.15) !important;
+  position: fixed;
+  transition: 0.28s !important;
+}
+
+/* -------------------------- 圆角样式优化 -------------------------- */
+.aplayer.aplayer-fixed .aplayer-list {
+  border-radius: 10px 10px 0 0 !important;
+}
+
+.aplayer.aplayer-fixed .aplayer-miniswitcher {
+  border-radius: 0 6px 6px 0 !important;
+}
+
+.aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+  border-radius: 6px !important;
+}
+
+/* -------------------------- 右侧控制条 毛玻璃 -------------------------- */
+.aplayer.aplayer-fixed .aplayer-miniswitcher {
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* -------------------------- 自定义滚动条 -------------------------- */
+.aplayer .aplayer-list ol::-webkit-scrollbar {
+  width: 5px;
+}
+
+.aplayer .aplayer-list ol::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background-color: #059efe;
+}
+
+.aplayer .aplayer-list ol::-webkit-scrollbar-thumb:hover {
+  background-color: #059efe;
+}
+
+/* -------------------------- 歌曲列表样式 -------------------------- */
+.aplayer-list .aplayer-list-item {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 12px !important;
+  gap: 8px !important;
+  font-family: "微软雅黑", "苹方", sans-serif !important;
+  font-size: 13px !important;
+  color: #070707 !important;
+}
+
+/* 鼠标悬浮效果 */
+.aplayer .aplayer-list ol li:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+  font-size: 13px !important;
+}
+
+/* 正在播放歌曲样式 */
+.aplayer .aplayer-list ol li.aplayer-list-light {
+  background: rgba(171, 171, 171, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+  font-size: 12px !important;
+  border-radius: 6px !important;
+  margin: 1px 6px !important;
+  padding: 0 15px !important;
+  width: auto !important;
+}
+
+/* -------------------------- 文字颜色/样式 -------------------------- */
+/* 歌名、歌手、序号 统一设置 */
+.aplayer-list li .aplayer-list-index,
+.aplayer-list li .aplayer-list-name,
+.aplayer-list li .aplayer-list-author {
+  color: #080808 !important;
+  font-weight: 500 !important;
+}
+
+/* 播放器标题/作者 */
+.aplayer-title {
+  font-family: "微软雅黑", "苹方", sans-serif !important;
+  font-size: 14px !important;
+  color: #100f0f !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.aplayer-author {
+  font-family: "微软雅黑", "苹方", sans-serif !important;
+  font-size: 12px !important;
+  color: #201f1f !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* -------------------------- 黑暗模式专属样式 -------------------------- */
+[data-theme="dark"] .aplayer {
+  background: rgba(22, 22, 22, 0.6) !important;
+  color: #ffffff;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.07), 0 1px 5px 0 rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .aplayer.aplayer-fixed .aplayer-body {
+  background: rgba(22, 22, 22, 0.6) !important;
+}
+
+[data-theme="dark"] .aplayer.aplayer-fixed .aplayer-miniswitcher {
+  background: rgba(22, 22, 22, 0.6) !important;
+}
+
+/* 深色模式 文字颜色 */
+[data-theme="dark"] .aplayer-list-index,
+[data-theme="dark"] .aplayer-list-name {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .aplayer-list-author,
+[data-theme="dark"] .aplayer .aplayer-info .aplayer-controller .aplayer-time {
+  color: #d4d4d4 !important;
+}
+
+/* 深色模式 图标颜色 */
+[data-theme="dark"] .aplayer .aplayer-info .aplayer-controller .aplayer-icon path {
+  fill: #d4d4d4;
+}
+
+/* 深色模式 交互样式 */
+[data-theme="dark"] .aplayer .aplayer-list ol li:hover {
+  background: #407290 !important;
+}
+
+[data-theme="dark"] .aplayer .aplayer-list ol li.aplayer-list-light {
+  background: #564e55 !important;
+}
