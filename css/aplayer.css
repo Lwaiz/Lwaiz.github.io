@@ -159,3 +159,20 @@
 [data-theme="dark"] .aplayer .aplayer-list ol li.aplayer-list-light {
   background: #564e55 !important;
 }
+
+[data-theme="dark"] .aplayer-list li .aplayer-list-index,
+[data-theme="dark"] .aplayer-list li .aplayer-list-name,
+[data-theme="dark"] .aplayer-list li .aplayer-list-author {
+  color: #d0cfcf !important;
+  font-weight: 500 !important;
+}
+
+[data-theme="dark"] .aplayer-title {
+  color: #d0cfcf !important;
+  font-weight: 500 !important;
+}
+
+[data-theme="dark"] .aplayer-author {
+  color: #d0cfcf !important;
+  font-weight: 400 !important;
+}
