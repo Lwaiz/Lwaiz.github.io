@@ -744,7 +744,7 @@ canvas_fluttering_ribbon:
 
 # 线条粒子背景
 canvas_nest:
-  enable: false
+  enable: true
   color: '0,0,255'
   opacity: 0.7
   zIndex: -1
@@ -759,7 +759,7 @@ fireworks:
 
 # 点击爱心特效
 click_heart:
-  enable: false
+  enable: true
   mobile: false
 
 # 点击文字特效
