@@ -1,21 +1,4 @@
-/* 页脚磨砂玻璃效果 */
-#footer {
-  background: rgba(199, 198, 198, 0.75) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
 
-/* 暗黑模式适配磨砂 */
-[data-theme="dark"] #footer {
-  background: rgba(0, 0, 0, 0.25) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* 清除默认遮罩 */
-#footer::before {
-  display: none !important;
-}
 
 /* 头像旋转动画 */
 #avatar img {

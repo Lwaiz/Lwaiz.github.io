@@ -1,0 +1,110 @@
+/* ========================
+ *    全局实现毛玻璃特效
+ * ======================== */
+
+#aside-content,
+#search-mask,
+/* 手机端 */
+#sidebar #menu-mask {
+  background: rgba(255, 255, 255, 0);
+}
+
+.search-dialog {
+  border-radius: 0px;
+}
+
+/* 浅色模式 */
+html[data-theme="light"] #aside-content>.card-widget:first-child,
+html[data-theme="light"] #aside-content .card-widget,
+html[data-theme="light"] .layout>div:first-child:not(.recent-posts),
+html[data-theme="light"] #recent-posts>.recent-post-item,
+html[data-theme="light"] #recent-posts .recent-post-item,
+/* 标题栏 */
+html[data-theme="light"] #page-header.nav-visible #nav,
+/* 搜索框 */
+html[data-theme="light"] .search-dialog,
+/* 说说页面容器 */
+/* 移动端 */
+html[data-theme="light"] #sidebar #sidebar-menus.open {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+}
+/* 页脚 */
+html[data-theme="light"] #footer {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* 深色模式 */
+html[data-theme="dark"] #aside-content>.card-widget:first-child,
+html[data-theme="dark"] #aside-content .card-widget,
+html[data-theme="dark"] .layout>div:first-child:not(.recent-posts),
+html[data-theme="dark"] #recent-posts>.recent-post-item,
+html[data-theme="dark"] #recent-posts .recent-post-item,
+/* 标题栏 */
+html[data-theme="dark"] #page-header.nav-visible #nav,
+/* 搜索框 */
+html[data-theme="dark"] .search-dialog,
+/* 移动端 */
+html[data-theme="dark"] #sidebar #sidebar-menus.open {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+}
+/* 页脚 */
+html[data-theme="dark"] #footer {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+
+/* 说说页面 每一条卡片 毛玻璃 */
+html[data-theme="light"] #card-webinfo .item,
+html[data-theme="light"] .twain-item,
+html[data-theme="light"] .say-item,
+html[data-theme="light"] #shuoshuo .item {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+html[data-theme="dark"] #card-webinfo .item,
+html[data-theme="dark"] .twain-item,
+html[data-theme="dark"] .say-item,
+html[data-theme="dark"] #shuoshuo .item {
+  background: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+
+/* 说说卡片毛玻璃效果 - 基础版 */
+#bber .bber-item {
+  /* 核心毛玻璃效果 */
+  background-color: rgba(255, 255, 255, 0.7) !important; /* 白色半透明背景 */
+  backdrop-filter: blur(10px) !important; /* 模糊强度，可调整10-20px */
+  -webkit-backdrop-filter: blur(10px) !important; /* 兼容Safari */
+  
+  /* 增强效果 */
+  border: 1px solid rgba(255, 255, 255, 0.2) !important; /* 细白边框 */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important; /* 柔和阴影 */
+  border-radius: 16px !important; /* 圆角，可调整 */
+}
+
+/* 深色模式适配 */
+[data-theme="dark"] #bber .bber-item {
+  background-color: rgba(30, 30, 30, 0.7) !important; /* 深色半透明背景 */
+  border: 1px solid rgba(60, 60, 60, 0.3) !important; /* 深色边框 */
+}
+
+/* 说说输入框/轮播区域同步毛玻璃效果（可选） */
+#bber-talk {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+[data-theme="dark"] #bber-talk {
+  background-color: rgba(30, 30, 30, 0.7) !important;
+}
