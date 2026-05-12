@@ -85,4 +85,15 @@
 }
 
 
+/* ===== 页脚时间显示 ========== */
+/* 消除默认间距 */
+#footer-wrap .footer-separator {
+  display: none;
+}
+
+/* 时间显示样式 */
+#realtime_duration {
+  letter-spacing: 1px;
+  white-space: nowrap; /* 防止换行 */
+}
 

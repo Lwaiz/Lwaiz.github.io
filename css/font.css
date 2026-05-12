@@ -75,3 +75,101 @@
   font-weight: normal;
   font-style: normal;
 }
+
+
+/* ==========================================
+ *         文章中 Markdown元素颜色适配
+ *    <引用块、行内代码、代码块、链接、表格等>
+ *           适配明暗模式，增强可读性
+ * ========================================== */ 
+
+/* ========== 引用块 blockquote 字体颜色 ========== */
+#article-container blockquote {
+  color: #0a61f7 !important;
+}
+[data-theme="dark"] #article-container blockquote {
+  color: #4696e7 !important;
+}
+
+/* ========== 行内代码 `xxx` 颜色 适配明暗模式 ========== */
+#article-container code:not(pre code) {
+  color: #e53935 !important;
+}
+[data-theme="dark"] #article-container code:not(pre code) {
+  color: #ff6a5f !important;
+}
+
+/* ========== 缩进式代码块（4个空格 / Tab）颜色 ========== */
+#article-container pre code {
+  color: #04b384 !important; /* 白天字体颜色 */
+  font-size: 1.1rem !important; /* 代码块字体大小 */
+}
+#article-container pre {
+  background-color: #d1e2e27d !important; /* 白天背景颜色 */
+}
+[data-theme="dark"] #article-container pre code {
+  color: #0cedb1 !important; /* 黑夜字体颜色 */
+}
+[data-theme="dark"] #article-container pre {
+  background-color: #1a1a1a !important; /* 黑夜背景颜色 */
+}
+
+/* ========== 文章内普通链接样式 ========== */
+#article-container a:not(.btn):not(.gallery-item):not(.post-title-link):not(.nav-link) {
+  /* 白天模式 */
+  color: #1681ce !important;          /* 链接文字颜色 */
+  text-decoration: none;               /* 去掉默认下划线 */
+  border-bottom: 1px solid #1681ce;    /* 自定义下划线（可选） */
+  transition: all 0.2s ease;           /* hover过渡效果 */
+}
+/* 链接 hover 效果（白天） */
+#article-container a:not(.btn):not(.gallery-item):not(.post-title-link):not(.nav-link):hover {
+  color: #2273b6 !important;          /* hover时加深颜色 */
+  border-bottom-width: 2px;            /* hover时下划线变粗 */
+}
+[data-theme="dark"] #article-container a:not(.btn):not(.gallery-item):not(.post-title-link):not(.nav-link) {
+  color: #7ccafa !important;
+  border-bottom-color: #7ccafa;
+}
+[data-theme="dark"] #article-container a:not(.btn):not(.gallery-item):not(.post-title-link):not(.nav-link):hover {
+  color: #a1d9ff !important;
+  border-bottom-color: #a1d9ff;
+}
+
+/* ========== 表格 背景、文字样式 (奇偶行不同) ========== */
+/* 表格整体样式 */
+#article-container table {
+  width: 100%;
+  border-radius: 6px !important;
+}
+/* 表头 */
+#article-container table th {
+  background-color: #d0e7f84f !important; /* 浅蓝表头（可改） */
+  color: #1976d2 !important;
+}
+[data-theme="dark"] #article-container table th {
+  background-color: #50646d5a !important;
+  color: #1976d2 !important;
+}
+/* 内容行 - 奇数行 */
+#article-container table tr:nth-child(odd) td {
+  background-color: #fafbfc51 !important;
+}
+/* 内容行 - 偶数行（斑马纹） */
+#article-container table tr:nth-child(even) td {
+  background-color: #c7c7c851 !important;
+}
+[data-theme="dark"] #article-container table tr:nth-child(odd) td {
+  background-color: #888c9c51 !important;
+}
+[data-theme="dark"] #article-container table tr:nth-child(even) td {
+  background-color: #81839143 !important;
+}
+
+/*文章版权声明*/
+.post-copyright {
+  font-size: 0.9rem !important;
+  color: #919090 !important;
+  margin-top: 2rem !important;
+  background-color: #d3f0e851 !important; /* 浅绿色背景 */
+}
