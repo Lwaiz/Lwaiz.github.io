@@ -1,7 +1,7 @@
 ---
 title: LSM-Tree
 date: 2026-05-08 14:24:05
-cover: /img/background/bg7.png
+cover: lsm_2.jpg
 tags: [存储引擎, 数据结构, LSM-Tree]
 categories: 技术笔记
 description: LSM 树 是面向高写入吞吐的存储引擎核心数据结构。

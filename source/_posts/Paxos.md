@@ -1,7 +1,7 @@
 ---
 title: Paxos
 date: 2026-05-08 16:32:05
-cover: /img/background/bg3.png
+cover: paxos.png
 tags: [分布式, 共识算法, Paxos]
 categories: 技术笔记
 description: Paxos 算法通过 "多数派原则" 保证集群就单一值达成安全一致的决议，是首个被证明完备的非拜占庭容错共识算法。

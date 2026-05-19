@@ -1,7 +1,7 @@
 ---
 title: Spanner论文
 date: 2026-05-08 16:36:28
-cover: /img/background/bg6.png
+cover: spanner_ChatGPT_Image.png
 tags: [分布式, 数据库, Spanner]
 categories: 论文解读
 description: Spanner论文是 Google 在 2013 年发表于 ACM TOCS 的经典论文，核心突破是 全球规模下实现外部一致性分布式事务。

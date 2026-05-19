@@ -1,7 +1,7 @@
 ---
 title: Spanner
 date: 2026-05-08 16:35:28
-cover: /img/background/bg5.png
+cover: spanner_2.png
 tags: [分布式, 数据库, Spanner]
 categories: 技术笔记
 description: Spanner 是 Google 自研的 全球分布式、强一致、多版本、同步复制的 NewSQL 数据库。

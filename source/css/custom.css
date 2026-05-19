@@ -58,31 +58,15 @@
   transform: scale(1.05); /* 鼠标悬停时放大5% */
 }
 
-
-/* ===== Butterfly 原生说说 ========== */
-
-.shuoshuo_content {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 8px !important;
-  margin: 12px 0 !important;
-}
-.shuoshuo_content p {
-  margin: 0 !important;
-  width: calc(33.333% - 6px) !important;
-}
-/* 图片样式 */
-.shuoshuo_content img {
-  width: 60% !important;
-  aspect-ratio: 1/1 !important;
-  object-fit: cover !important;
-  border-radius: 8px !important;
-  cursor: zoom-in !important;
-  transition: 0.2s !important;
-}
-.shuoshuo_content img:hover {
-  opacity: 0.9 !important;
+/* ===== 页脚时间显示 ========== */
+/* 消除默认间距 */
+#footer-wrap .footer-separator {
+  display: none;
 }
 
-
+/* 时间显示样式 */
+#realtime_duration {
+  letter-spacing: 1px;
+  white-space: nowrap; /* 防止换行 */
+}
 

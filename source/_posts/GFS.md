@@ -1,7 +1,7 @@
 ---
 title: GFS
 date: 2026-05-08 20:20:09
-cover: /img/background/bg3.png
+cover: gfs_2.jpg
 tags: [分布式, 数据库, 文件系统]
 categories: 技术笔记
 description: Google File System (GFS) 是由 Google 在 2003 年提出的分布式文件系统，专为大规模数据密集型应用（如搜索引擎、日志存储）设计。

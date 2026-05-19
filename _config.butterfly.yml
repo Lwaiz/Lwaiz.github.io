@@ -271,7 +271,10 @@ footer:
   copyright:
     enable: true
     version: true   # 显示主题版本
-  custom_text:      # 自定义页脚文字
+  # 添加页脚建站时间  # 自定义页脚文字
+  custom_text: 
+    - '<span id="realtime_duration"></span>' # 注意要带引号
+
 
 # --------------------------------------
 # 侧边栏 设置
@@ -328,7 +331,7 @@ aside:
   card_tags:
     enable: true
     limit: 40
-    color: false     # 标签是否彩色
+    color: true    # 标签是否彩色
     custom_colors:
     orderby: random  # 标签排序 random/name/length
     order: 1         # 1升序 -1降序
@@ -894,6 +897,7 @@ inject:
     - <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
     - <link rel="stylesheet" href="/css/font.css">
     - <link rel="stylesheet" href="/css/aplayer.css">
+    - <link rel="stylesheet" href="/css/shuoshuo.css">
   bottom:
     - <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
     - <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
@@ -907,7 +911,9 @@ inject:
         lrcFolded="true">
       </meting-js>
     - <script>var observer=new MutationObserver(function(e){var t=document.querySelector(".aplayer-icon-lrc");t&&(setTimeout(function(){t.click()},1),observer.disconnect())});observer.observe(document.body,{childList:true,subtree:true});</script>
-    
+    - <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/dayjs.min.js"></script>
+    - <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/plugin/duration.min.js"></script>
+    - <script src="/scripts/realtime.js"></script>
 
 # CDN 资源配置
 CDN:

@@ -1,7 +1,7 @@
 ---
 title: Raft论文
 date: 2026-05-08 16:26:05
-cover: /img/background/bg8.png
+cover: raft_ChatGPT_Image.png
 tags: [分布式, 共识算法, Raft]
 categories: 论文解读
 description: Raft 将可理解性作为第一优先级。核心设计思路是 强领导者模型，先选举出集群中唯一的领导者，由领导者全权负责复制日志的管理。

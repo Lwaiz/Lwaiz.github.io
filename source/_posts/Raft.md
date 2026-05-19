@@ -1,7 +1,7 @@
 ---
 title: Raft
 date: 2026-05-08 16:26:05
-cover: /img/background/bg4.png
+cover: raft_1.jpg
 tags: [分布式, 共识算法, Raft]
 categories: 技术笔记
 description: Raft 是为简化 Paxos 而生、易于理解且工程友好的分布式共识算法，是工业界应用最广的共识协议。

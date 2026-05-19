@@ -1,7 +1,7 @@
 ---
 title: Paxos论文
 date: 2026-05-08 16:32:05
-cover: /img/background/bg2.png
+cover: paxos_ChatGPT_Image.png
 tags: [分布式, 共识算法, Paxos]
 categories: 论文解读
 description: Paxos 论文奠定了现代分布式系统共识协议的理论基础。 The Paxos algorithm, when presented in plain English, is very simple.

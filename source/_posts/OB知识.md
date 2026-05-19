@@ -1,13 +1,15 @@
 ---
 title: OceanBase 基础了解
 date: 2026-05-08 20:16:51
-cover: /img/background/bg4.png
+cover: ob_gpt_generate_2.png
 tags: [分布式, 数据库]
 categories: 技术笔记
 description: OceanBase 数据库是一款完全自研的企业级原生分布式数据库，具有云原生、强一致性、高度兼容 Oracle/MySQL 等特性。
 ---
 
 # OceanBase知识
+
+> (主页图片由 ChatGPT 生成)
 
 [OceanBase - OceanBase 数据库整体架构](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000005682187)
 
