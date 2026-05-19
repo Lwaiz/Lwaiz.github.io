@@ -1,0 +1,119 @@
+/* ========== Butterfly 原生说说 美化 ========== */
+
+/* 说说页面底层根容器 #page.nc 毛玻璃 */
+div#page.nc {
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #4C4948;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  font-size: 14px;
+  line-height: 1.6;
+  transition: background 0.3s ease, color 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+[data-theme="dark"] div#page.nc {
+  background: rgba(30, 30, 40, 0.25) !important;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* 说说全局颜色变量 */
+div.shuoshuo-item {
+  --shuoshuo-text: #1f2937;
+  --shuoshuo-meta: #6b7280;
+  --shuoshuo-theme: #2563eb;
+}
+[data-theme="dark"] div.shuoshuo-item {
+  --shuoshuo-text: #f3f4f6;
+  --shuoshuo-meta: #9ca3af;
+}
+
+/* 单条说说卡片 毛玻璃核心 */
+div.shuoshuo-item {
+  background: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 12px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  margin-bottom: 20px !important;
+  padding: 16px !important;
+  border: 1px solid rgba(255,255,255,0.35) !important;
+  transition: all 0.3s ease;
+}
+[data-theme="dark"] div.shuoshuo-item {
+  background: rgba(45, 45, 60, 0.35) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+/* 卡片悬浮上浮 */
+div.shuoshuo-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 说说正文文字 */
+div.shuoshuo-item .shuoshuo-content {
+  color: var(--shuoshuo-text);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* 说说时间文字 */
+div.shuoshuo-item .shuoshuo-time {
+  color: var(--shuoshuo-meta);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+
+
+/* ================== 说说图片布局 ===================== */
+/* ========== 说说图片布局 终极定稿版 ========== */
+/* 适配：shuoshuo.yml 中每行一张图片的写法 */
+/* 规则：1张=1列 | 2/4张=2列 | 3/5+张=3列 */
+
+/* 父容器：强制弹性布局 */
+div.shuoshuo-item .shuoshuo-content {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 10px 0 !important;
+}
+
+/* 所有图片容器 p 标签：默认 3列 */
+div.shuoshuo-item .shuoshuo-content p {
+  margin: 0 !important;
+  width: calc(33.333% - 6px) !important;
+}
+
+/* 图片样式：正方形、圆角 */
+div.shuoshuo-item .shuoshuo-content p img {
+  width: 100% !important;
+  aspect-ratio: 1/1 !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+  display: block !important;
+}
+
+/* 悬浮效果 */
+div.shuoshuo-item .shuoshuo-content p img:hover {
+  opacity: 0.9 !important;
+}
+
+/* ============= 自适应规则 ============= */
+/* 1张图片 → 全屏 */
+div.shuoshuo-item .shuoshuo-content p:only-child {
+  width: 100% !important;
+}
+/* 2张图片 → 2列 */
+div.shuoshuo-item .shuoshuo-content p:nth-child(1):nth-last-child(2),
+div.shuoshuo-item .shuoshuo-content p:nth-child(2):nth-last-child(1) {
+  width: calc(50% - 4px) !important;
+}
+/* 4张图片 → 2列 */
+div.shuoshuo-item .shuoshuo-content p {
+  width: calc(50% - 4px) !important;
+}
+

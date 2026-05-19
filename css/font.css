@@ -104,13 +104,15 @@
   color: #04b384 !important; /* 白天字体颜色 */
   font-size: 1.1rem !important; /* 代码块字体大小 */
 }
-#article-container pre {
-  background-color: #d1e2e27d !important; /* 白天背景颜色 */
+#article-container pre,
+#article-container table {
+  background-color: #e1efef60 !important; /* 白天背景颜色 */
 }
 [data-theme="dark"] #article-container pre code {
   color: #0cedb1 !important; /* 黑夜字体颜色 */
 }
-[data-theme="dark"] #article-container pre {
+[data-theme="dark"] #article-container pre,
+[data-theme="dark"] #article-container table {
   background-color: #1a1a1a !important; /* 黑夜背景颜色 */
 }
 
