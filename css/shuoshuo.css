@@ -69,51 +69,68 @@ div.shuoshuo-item .shuoshuo-time {
 
 
 
-/* ================== 说说图片布局 ===================== */
-/* ========== 说说图片布局 终极定稿版 ========== */
-/* 适配：shuoshuo.yml 中每行一张图片的写法 */
-/* 规则：1张=1列 | 2/4张=2列 | 3/5+张=3列 */
 
-/* 父容器：强制弹性布局 */
-div.shuoshuo-item .shuoshuo-content {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 8px !important;
-  margin: 10px 0 !important;
-}
 
-/* 所有图片容器 p 标签：默认 3列 */
-div.shuoshuo-item .shuoshuo-content p {
-  margin: 0 !important;
-  width: calc(33.333% - 6px) !important;
-}
 
-/* 图片样式：正方形、圆角 */
-div.shuoshuo-item .shuoshuo-content p img {
-  width: 100% !important;
-  aspect-ratio: 1/1 !important;
-  object-fit: cover !important;
-  border-radius: 8px !important;
-  display: block !important;
+/* ===========================
+ * 说说图片九宫格布局
+ * 微信朋友圈风格
+ * =========================== */
+
+/* =========================
+ * 朋友圈九宫格
+ * ========================= */
+
+.shuoshuo-images {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-/* 悬浮效果 */
-div.shuoshuo-item .shuoshuo-content p img:hover {
-  opacity: 0.9 !important;
+/* 图片 */
+.shuoshuo-images img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+
+  border-radius: 12px;
+
+  transition: all .3s ease;
 }
 
-/* ============= 自适应规则 ============= */
-/* 1张图片 → 全屏 */
-div.shuoshuo-item .shuoshuo-content p:only-child {
-  width: 100% !important;
-}
-/* 2张图片 → 2列 */
-div.shuoshuo-item .shuoshuo-content p:nth-child(1):nth-last-child(2),
-div.shuoshuo-item .shuoshuo-content p:nth-child(2):nth-last-child(1) {
-  width: calc(50% - 4px) !important;
-}
-/* 4张图片 → 2列 */
-div.shuoshuo-item .shuoshuo-content p {
-  width: calc(50% - 4px) !important;
+.shuoshuo-images img:hover {
+  transform: scale(1.01);
 }
 
+/* 1张 */
+.shuoshuo-images-1 {
+  grid-template-columns: minmax(250px, 400px);
+}
+
+/* 2张  4张*/
+.shuoshuo-images-2,
+.shuoshuo-images-4 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* 3、5、6、7、8、9张 */
+.shuoshuo-images-3,
+.shuoshuo-images-5,
+.shuoshuo-images-6,
+.shuoshuo-images-7,
+.shuoshuo-images-8,
+.shuoshuo-images-9 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* 预览图片的灯箱内边距 (缩小预览图片初始大小) */
+.fancybox__slide {
+    padding: 15vh 15vw !important;
+}
+
+/* Fancybox 背景虚化 */
+.fancybox__backdrop {
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    background: rgba(0, 0, 0, 0.25) !important;
+}
