@@ -1,7 +1,7 @@
 ---
 title: APlayer 美化指南：打造现代化毛玻璃音乐播放器
 date: 2026-05-13 12:06:14
-cover: /img/background/bg4.png
+cover: /img/header_bg/zhefeng2.png
 tags: [Hexo , Butterfly , Aplayer , 博客美化]
 categories: 设计美化
 description: Hexo + Butterfly博客，使用Aplayer播放器实现网页播放器，支持导入歌单，美化毛玻璃特效，自动隐藏呼出

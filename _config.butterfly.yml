@@ -835,7 +835,6 @@ note:
 pjax:
   enable: true
   exclude:
-    # - /xxxxxx/
 
 # Aplayer 音乐播放器注入
 aplayerInject:
